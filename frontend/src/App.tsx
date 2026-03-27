@@ -9,6 +9,7 @@ import { useMe } from './hooks/useAuth';
 import HomePage from './pages/HomePage';
 import ProductListPage from './pages/ProductListPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import SearchProductPage from './pages/SearchProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
@@ -55,6 +56,7 @@ function App() {
           <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/:slug" element={<ProductDetailPage />} />
           <Route path="/categories/:slug" element={<ProductListPage />} />
+          <Route path="/search" element={<SearchProductPage />} />
           <Route path="/cart" element={<CartPage />} />
 
           <Route

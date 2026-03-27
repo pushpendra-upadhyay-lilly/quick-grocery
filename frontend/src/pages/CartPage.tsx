@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../stores/cartStore';
 import { useRemoveFromCart, useUpdateCartQuantity, useClearCart } from '../hooks/useCart';
+import ItemQuantity from '../components/ItemQuantity';
 
 export default function CartPage() {
   const { items, total } = useCartStore();
@@ -10,11 +11,20 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-brand-600 mb-4">Your cart is empty</p>
-        <Link to="/products" className="text-brand-700 font-bold hover:underline">
-          Continue shopping
-        </Link>
+      <div className="min-h-[600px] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="mb-6">
+            <img src="/AppLogoFull.png" alt="QuickGrocery" className="h-auto w-auto mx-auto opacity-80 mb-4" />
+          </div>
+          <h1 className="text-3xl font-bold text-brand-700 mb-2">Your Cart is Empty</h1>
+          <p className="text-brand-600 mb-8 text-lg">No items yet. Start shopping to fill your cart with fresh groceries!</p>
+          <Link
+            to="/products"
+            className="inline-block bg-brand-600 text-white py-4 px-12 rounded-lg font-bold text-lg hover:bg-brand-700 transition transform hover:scale-105 shadow-md"
+          >
+            🛍️ Continue Shopping
+          </Link>
+        </div>
       </div>
     );
   }
@@ -23,9 +33,9 @@ export default function CartPage() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2">
         <h1 className="text-3xl font-bold mb-6 text-brand-700">Shopping Cart</h1>
-        <div className="space-y-4">
+        <div className="space-y-2">
           {items.map((item) => (
-            <div key={item.productId} className="bg-brand-50 border-2 border-brand-200 rounded-lg p-4 flex gap-4 hover:border-brand-400">
+            <div key={item.productId} className="bg-brand-50 shadow-sm p-4 flex gap-4 hover:border-brand-400">
               <img src={item.imageUrl} alt={item.name} className="w-24 h-24 object-cover rounded bg-gray-200" />
               <div className="flex-1">
                 <h3 className="font-bold text-brand-800">{item.name}</h3>
@@ -36,27 +46,17 @@ export default function CartPage() {
                 <button
                   onClick={() => removeFromCart.mutate(item.productId)}
                   disabled={removeFromCart.isPending}
-                  className="text-brand-600 text-sm hover:text-brand-700 hover:underline disabled:opacity-50"
+                  className="text-red-600 text-sm hover:text-red-700 disabled:opacity-50"
                 >
                   Remove
                 </button>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updateQuantity.mutate({ productId: item.productId, quantity: item.quantity - 1 })}
-                    disabled={updateQuantity.isPending}
-                    className="px-2 py-1 border-2 border-brand-300 rounded hover:bg-brand-100 text-brand-700 font-bold disabled:opacity-50"
-                  >
-                    −
-                  </button>
-                  <span className="w-8 text-center font-bold text-brand-700">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity.mutate({ productId: item.productId, quantity: item.quantity + 1 })}
-                    disabled={updateQuantity.isPending}
-                    className="px-2 py-1 border-2 border-brand-300 rounded hover:bg-brand-100 text-brand-700 font-bold disabled:opacity-50"
-                  >
-                    +
-                  </button>
-                </div>
+                <ItemQuantity
+                  quantity={item.quantity}
+                  onQuantityChange={(quantity) =>
+                    updateQuantity.mutate({ productId: item.productId, quantity })
+                  }
+                  isLoading={updateQuantity.isPending}
+                />
               </div>
             </div>
           ))}

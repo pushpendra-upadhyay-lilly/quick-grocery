@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../lib/apiClient';
+import { useAuthStore } from '../stores/authStore';
 
 export interface Category {
   _id: string;
@@ -71,23 +72,24 @@ export function useCategories() {
   });
 }
 
-export function useCategoryProducts(
-  slug: string,
-  page = 1,
-  limit = 20,
-  sort?: string,
-) {
+export function useTopProducts() {
   return useQuery({
-    queryKey: ['categoryProducts', slug, { page, limit, sort }],
+    queryKey: ['products', 'top'],
     queryFn: async () => {
-      const response = await apiClient.get(
-        `/products/categories/${slug}/products`,
-        {
-          params: { page, limit, sort, inStock: true },
-        },
-      );
+      const response = await apiClient.get('/products/top/trending');
       return response.data;
     },
-    enabled: !!slug,
+  });
+}
+
+export function useMyFrequentProducts() {
+  const token = useAuthStore((s) => s.accessToken);
+  return useQuery({
+    queryKey: ['products', 'my-frequent'],
+    queryFn: async () => {
+      const response = await apiClient.get('/products/recommendations/my-frequent');
+      return response.data;
+    },
+    enabled: !!token,
   });
 }
