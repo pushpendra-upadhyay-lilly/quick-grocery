@@ -11,12 +11,16 @@ import { OrderRequestService } from './order-requests.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtSseGuard } from '../auth/guards/jwt-sse.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { LocationService } from '../location/location.service';
 import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Controller('order-requests')
 export class OrderRequestController {
-  constructor(private orderRequestService: OrderRequestService) {}
+  constructor(
+    private orderRequestService: OrderRequestService,
+    private locationService: LocationService,
+  ) {}
 
   /**
    * SSE endpoint for listening to order requests in real-time
@@ -27,6 +31,8 @@ export class OrderRequestController {
     const deliveryPartnerId = user.id;
 
     return new Observable((subscriber) => {
+      void this.locationService.heartbeat(deliveryPartnerId);
+
       // Send initial connection message
       subscriber.next({
         data: JSON.stringify({
@@ -35,6 +41,16 @@ export class OrderRequestController {
           timestamp: new Date().toISOString(),
         }),
       } as MessageEvent);
+
+      const heartbeatSubscription = interval(15000).subscribe(() => {
+        void this.locationService.heartbeat(deliveryPartnerId);
+        subscriber.next({
+          data: JSON.stringify({
+            type: 'heartbeat',
+            timestamp: new Date().toISOString(),
+          }),
+        } as MessageEvent);
+      });
 
       // Poll for pending requests every 5 seconds
       const subscription = interval(5000)
@@ -76,7 +92,11 @@ export class OrderRequestController {
           subscriber.next({ data: JSON.stringify(message) } as MessageEvent);
         });
 
-      return () => subscription.unsubscribe();
+      return () => {
+        subscription.unsubscribe();
+        heartbeatSubscription.unsubscribe();
+        void this.locationService.stopTracking(deliveryPartnerId);
+      };
     });
   }
 

@@ -34,7 +34,9 @@ export class AuthController {
   @UseGuards(IdentifierRateLimitGuard)
   async verifyOtp(@Body() dto: VerifyOtpDto, @Res() res: Response) {
     const tokens = await this.authService.verifyOtp(dto.identifier, dto.otp);
-    const user = await this.userRepo.findOne({ where: { identifier: dto.identifier } });
+    const user = await this.userRepo.findOne({
+      where: { identifier: dto.identifier },
+    });
 
     if (!user) {
       throw new Error('User not found after OTP verification');

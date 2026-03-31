@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useWalletStore } from '../stores/walletStore';
 import apiClient from '../lib/apiClient';
+import { toNumber } from '../lib/parsers';
 
 interface WalletResponse {
-  balance: number;
-  totalEarnings: number;
-  pendingEarnings: number;
-  totalWithdrawn: number;
+  balance: number | string;
+  totalEarnings: number | string;
+  pendingEarnings: number | string;
+  totalWithdrawn: number | string;
   user: {
     id: string;
     firstName: string;
@@ -30,10 +31,10 @@ export const useWallet = () => {
     },
     onSuccess: (data) => {
       setWalletData({
-        balance: parseFloat(data.balance.toString()),
-        totalEarnings: parseFloat(data.totalEarnings.toString()),
-        pendingEarnings: parseFloat(data.pendingEarnings.toString()),
-        totalWithdrawn: parseFloat(data.totalWithdrawn.toString()),
+        balance: toNumber(data.balance, 0),
+        totalEarnings: toNumber(data.totalEarnings, 0),
+        pendingEarnings: toNumber(data.pendingEarnings, 0),
+        totalWithdrawn: toNumber(data.totalWithdrawn, 0),
       });
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -48,11 +49,15 @@ export const useWalletBalance = () => {
     queryKey: ['wallet', 'balance'],
     queryFn: async () => {
       const response = await apiClient.get<{
-        balance: number;
-        totalEarnings: number;
-        pendingEarnings: number;
+        balance: number | string;
+        totalEarnings: number | string;
+        pendingEarnings: number | string;
       }>('/wallet/balance');
-      return response.data;
+      return {
+        balance: toNumber(response.data.balance, 0),
+        totalEarnings: toNumber(response.data.totalEarnings, 0),
+        pendingEarnings: toNumber(response.data.pendingEarnings, 0),
+      };
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });

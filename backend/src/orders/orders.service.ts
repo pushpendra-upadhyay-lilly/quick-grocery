@@ -1,6 +1,11 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   Order,
@@ -9,21 +14,91 @@ import {
   OrderStatusEvent,
 } from './entities/order.entity';
 import { Address } from '../users/entities/address.entity';
+import { Location } from '../location/entities/location.entity';
 import { CartService } from '../cart/cart.service';
 import { ProductsService } from '../products/products.service';
+import { WalletService } from '../wallet/wallet.service';
+import { User } from '../users/entities/user.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
 export class OrdersService {
+  private static readonly DELIVERY_PARTNER_ACTIVE_WINDOW_MS = 30_000;
+
   constructor(
     @InjectRepository(Order) private orderRepo: Repository<Order>,
     @InjectRepository(OrderItem) private itemRepo: Repository<OrderItem>,
-    @InjectRepository(OrderStatusEvent) private eventRepo: Repository<OrderStatusEvent>,
+    @InjectRepository(OrderStatusEvent)
+    private eventRepo: Repository<OrderStatusEvent>,
     @InjectRepository(Address) private addressRepo: Repository<Address>,
+    @InjectRepository(Location) private locationRepo: Repository<Location>,
+    @InjectRepository(User) private userRepo: Repository<User>,
     private cartService: CartService,
     private productsService: ProductsService,
+    private walletService: WalletService,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
+
+  /**
+   * Calculate distance between two coordinates (km)
+   */
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  /**
+   * Find nearby delivery partners (top 3 closest and active)
+   */
+  private async findNearbyDeliveryPartners(
+    deliveryLatitude: number,
+    deliveryLongitude: number,
+  ): Promise<User[]> {
+    const activeThreshold = new Date(
+      Date.now() - OrdersService.DELIVERY_PARTNER_ACTIVE_WINDOW_MS,
+    );
+
+    const activeLocations = await this.locationRepo.find({
+      where: {
+        isTracking: true,
+        updatedAt: MoreThan(activeThreshold),
+      },
+      relations: ['user'],
+    });
+
+    if (!activeLocations || activeLocations.length === 0) {
+      return [];
+    }
+
+    const withDistance = activeLocations.map((loc) => ({
+      user: loc.user,
+      distance: this.calculateDistance(
+        Number(loc.latitude),
+        Number(loc.longitude),
+        deliveryLatitude,
+        deliveryLongitude,
+      ),
+    }));
+
+    return withDistance
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 3)
+      .map((item) => item.user);
+  }
 
   async createOrder(userId: string, dto: CreateOrderDto) {
     const address = await this.addressRepo.findOne({
@@ -61,17 +136,34 @@ export class OrdersService {
       totalAmount += product.price * item.quantity;
     }
 
+    const deliveryFee = 50; // Fixed for now, can be dynamic
+
+    // Check if delivery partners are available
+    const nearbyDPs = await this.findNearbyDeliveryPartners(
+      Number(address.latitude),
+      Number(address.longitude),
+    );
+
+    if (!nearbyDPs || nearbyDPs.length === 0) {
+      throw new BadRequestException(
+        'No delivery partners available at the moment. Please try ordering after some time.',
+      );
+    }
+
     // Create order
     const order = this.orderRepo.create({
       userId,
-      status: OrderStatus.PLACED,
+      status: OrderStatus.PENDING,
       addressSnapshot: {
         line1: address.line1,
         line2: address.line2,
         city: address.city,
         postcode: address.postcode,
       },
+      deliveryLatitude: address.latitude,
+      deliveryLongitude: address.longitude,
       totalAmount,
+      deliveryFee,
     });
 
     const savedOrder = await this.orderRepo.save(order);
@@ -87,9 +179,23 @@ export class OrdersService {
     // Create initial status event
     await this.eventRepo.save({
       orderId: savedOrder.id,
-      status: OrderStatus.PLACED,
+      status: OrderStatus.PENDING,
       note: 'Order placed',
     });
+
+    // Send order requests to nearby DPs via event
+    if (nearbyDPs.length > 0) {
+      this.eventEmitter.emit('order.request_created', {
+        orderId: savedOrder.id,
+        deliveryPartnerIds: nearbyDPs.map((dp) => dp.id),
+        deliveryFee,
+        pickupLatitude: 0, // Assume restaurant at origin for now
+        pickupLongitude: 0,
+        deliveryLatitude: address.latitude,
+        deliveryLongitude: address.longitude,
+        expiresAt: new Date(Date.now() + 2 * 60 * 1000), // 2 minutes
+      });
+    }
 
     // Clear cart
     await this.cartService.clearCart(userId);
@@ -107,7 +213,7 @@ export class OrdersService {
   async getOrders(userId: string) {
     return this.orderRepo.find({
       where: { userId },
-      relations: ['items', 'statusHistory'],
+      relations: ['items', 'statusHistory', 'deliveryPartner'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -115,26 +221,80 @@ export class OrdersService {
   async getOrderById(orderId: string, userId: string) {
     return this.orderRepo.findOne({
       where: { id: orderId, userId },
-      relations: ['items', 'statusHistory'],
+      relations: ['items', 'statusHistory', 'deliveryPartner'],
     });
   }
 
-  async updateOrderStatus(orderId: string, status: OrderStatus) {
+  async getAssignedOrders(deliveryPartnerId: string) {
+    return this.orderRepo.find({
+      where: { deliveryPartnerId },
+      relations: ['items', 'statusHistory', 'deliveryPartner'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async getAssignedOrderById(orderId: string, deliveryPartnerId: string) {
+    return this.orderRepo.findOne({
+      where: { id: orderId, deliveryPartnerId },
+      relations: ['items', 'statusHistory', 'deliveryPartner'],
+    });
+  }
+
+  async getOrderForParticipant(orderId: string, participantId: string) {
+    return this.orderRepo.findOne({
+      where: [
+        { id: orderId, userId: participantId },
+        { id: orderId, deliveryPartnerId: participantId },
+      ],
+      relations: ['items', 'statusHistory', 'deliveryPartner'],
+    });
+  }
+
+  /**
+   * Update order status by delivery partner
+   */
+  async updateOrderStatus(
+    orderId: string,
+    dpId: string,
+    status: OrderStatus,
+  ): Promise<OrderStatusEvent> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
     });
 
     if (!order) {
-      throw new BadRequestException('Order not found');
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.deliveryPartnerId !== dpId) {
+      throw new ForbiddenException('Not authorized to update this order');
     }
 
     if (order.completed) {
       throw new BadRequestException('Cannot update a completed order');
     }
 
+    // Validate status progression
+    const validTransitions = {
+      [OrderStatus.ACCEPTED]: [OrderStatus.GOING_FOR_PICKUP],
+      [OrderStatus.GOING_FOR_PICKUP]: [OrderStatus.OUT_FOR_DELIVERY],
+      [OrderStatus.OUT_FOR_DELIVERY]: [OrderStatus.REACHED],
+      [OrderStatus.REACHED]: [OrderStatus.DELIVERED],
+    };
+
+    if (
+      !validTransitions[order.status] ||
+      !validTransitions[order.status].includes(status)
+    ) {
+      throw new BadRequestException(
+        `Cannot transition from ${order.status} to ${status}`,
+      );
+    }
+
     order.status = status;
-    order.completed =
-      status === OrderStatus.DELIVERED || status === OrderStatus.CANCELLED;
+    if (status === OrderStatus.DELIVERED) {
+      order.completed = true;
+    }
     await this.orderRepo.save(order);
 
     // Create status event
@@ -152,5 +312,58 @@ export class OrdersService {
     });
 
     return event;
+  }
+
+  /**
+   * Mark order as delivered (DP confirms delivery)
+   */
+  async markDelivered(orderId: string, dpId: string): Promise<Order> {
+    const order = await this.orderRepo.findOne({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.deliveryPartnerId !== dpId) {
+      throw new ForbiddenException('Not authorized to deliver this order');
+    }
+
+    if (order.status !== OrderStatus.REACHED) {
+      throw new BadRequestException(
+        'Order must be in reached status to mark as delivered',
+      );
+    }
+
+    // Update order status
+    order.status = OrderStatus.DELIVERED;
+    order.completed = true;
+    await this.orderRepo.save(order);
+
+    // Create status event
+    await this.eventRepo.save({
+      orderId,
+      status: OrderStatus.DELIVERED,
+      note: 'Order delivered by delivery partner',
+    });
+
+    // Move earnings from pending to confirmed
+    await this.walletService.confirmPendingEarnings(dpId, order.deliveryFee);
+
+    // Emit event for SSE
+    this.eventEmitter.emit('order.status_updated', {
+      orderId,
+      status: OrderStatus.DELIVERED,
+      timestamp: new Date(),
+    });
+
+    this.eventEmitter.emit('order.completed', {
+      orderId,
+      dpId,
+      earnedAmount: order.deliveryFee,
+    });
+
+    return order;
   }
 }

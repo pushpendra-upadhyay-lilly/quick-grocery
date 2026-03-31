@@ -12,6 +12,8 @@ interface Address {
   city: string;
   postcode: string;
   phone: string;
+  latitude?: number;
+  longitude?: number;
   isDefault?: boolean;
 }
 
@@ -28,6 +30,8 @@ export default function AddressFormPage() {
     city: '',
     postcode: '',
     phone: '',
+    latitude: undefined,
+    longitude: undefined,
     isDefault: false,
   });
 
@@ -75,16 +79,46 @@ export default function AddressFormPage() {
     });
   };
 
-  const handleMapPin = () => {
-    // Open Google Maps with the address
-    const query = encodeURIComponent(`${formData.line1} ${formData.line2 ? formData.line2 + ' ' : ''}${formData.city} ${formData.postcode}`);
-    window.open(`https://maps.google.com/?q=${query}`, '_blank');
+  const handleMapPin = async () => {
+    // Use browser geolocation OR geocode address
+    if (!formData.line1 || !formData.city) {
+      toast.error('Please enter street and city to pin location');
+      return;
+    }
+
+    // Try browser geolocation first
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData({
+            ...formData,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          toast.success('Location pinned from your device');
+        },
+        (error) => {
+          // If geolocation fails, Ask for device Location Permission
+          if(error.code === error.PERMISSION_DENIED) {
+             toast.error('Please allow location access to pin your address');
+          } else {
+             toast.error('Failed to get location: ' + error.message);
+          }
+        }
+      );
+    } else {
+      toast.error('Geolocation not supported by your browser');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.label || !formData.line1 || !formData.city || !formData.postcode || !formData.phone) {
       toast.error('Please fill all required fields');
+      return;
+    }
+    if (!formData.latitude || !formData.longitude) {
+      toast.error('Please pin the location on the map');
       return;
     }
     mutation.mutate(formData);
@@ -178,6 +212,25 @@ export default function AddressFormPage() {
           />
         </div>
 
+        {/* Location Coordinates */}
+        <div className="bg-white p-3 rounded border-2 border-blue-200">
+          <p className="text-sm font-semibold text-blue-700 mb-2">📍 Location Coordinates</p>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <p className="text-gray-600 font-semibold">Latitude</p>
+              <p className="text-blue-600 font-mono">
+                {formData.latitude ? formData.latitude.toFixed(6) : 'Not set'}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-600 font-semibold">Longitude</p>
+              <p className="text-blue-600 font-mono">
+                {formData.longitude ? formData.longitude.toFixed(6) : 'Not set'}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium mb-1 text-brand-700">Set as Default</label>
           <input
@@ -195,8 +248,13 @@ export default function AddressFormPage() {
             onClick={handleMapPin}
             className="w-full bg-blue-500 text-white py-2 rounded font-bold hover:bg-blue-600"
           >
-            📍 View on Google Maps
+            📍 {formData.latitude ? 'Change Location' : 'Pin Location on Map'}
           </button>
+          <p className="text-xs text-gray-600 mt-2">
+            {formData.latitude
+              ? '✓ Location pinned. Click to change.'
+              : 'Click to use your device GPS or open Google Maps'}
+          </p>
         </div>
 
         <div className="flex gap-3 pt-4">

@@ -12,6 +12,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 // Protected Pages
 import HomePage from './pages/HomePage';
 import AccountPage from './pages/AccountPage';
+import DeliveryHistoryPage from './pages/DeliveryHistoryPage';
 // import DashboardPage from './pages/DashboardPage';
 // import DeliveryPage from './pages/DeliveryPage';
 // import WalletPage from './pages/WalletPage';
@@ -67,6 +68,15 @@ function App() {
               <AccountPage />
             </ProtectedRoute>
           } />
+
+          <Route
+            path="/deliveries"
+            element={
+              <ProtectedRoute>
+                <DeliveryHistoryPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Redirect unknown routes to login */}
           <Route path="*" element={<Navigate to="/auth/login" replace />} />

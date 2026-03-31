@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -10,6 +11,7 @@ import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import { User, IdentifierType } from '../users/entities/user.entity';
 import { RefreshToken } from '../users/entities/refresh-token.entity';
+import { Location } from '../location/entities/location.entity';
 import { OtpService } from '../otp/otp.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -21,6 +23,7 @@ export class AuthService {
     private config: ConfigService,
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(RefreshToken) private tokenRepo: Repository<RefreshToken>,
+    @InjectRepository(Location) private locationRepo: Repository<Location>,
     private otpService: OtpService,
   ) {}
 
@@ -62,22 +65,15 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    let user = await this.userRepo.findOne({
+    const user = await this.userRepo.findOne({
       where: { identifier: dto.identifier },
     });
 
     if (!user) {
-      // Auto-create user if doesn't exist (for development)
-      const identifierType = this.detectIdentifierType(dto.identifier);
-
-      user = this.userRepo.create({
-        identifier: dto.identifier,
-        identifierType,
-        firstName: 'Guest',
-        lastName: 'User',
-      });
-
-      await this.userRepo.save(user);
+      // Throw Account Not Found Exception ask user to register first
+      throw new BadRequestException(
+        'Account not found. Please register before logging in.',
+      );
     }
 
     // Generate OTP
@@ -175,6 +171,7 @@ export class AuthService {
 
   async logout(userId: string) {
     await this.tokenRepo.update({ userId }, { revoked: true });
+    await this.locationRepo.update({ userId }, { isTracking: false });
   }
 
   private async generateTokens(

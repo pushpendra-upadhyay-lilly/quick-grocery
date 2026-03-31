@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Wallet } from './entities/wallet.entity';
@@ -10,6 +14,21 @@ export class WalletService {
     @InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
     @InjectRepository(User) private userRepo: Repository<User>,
   ) {}
+
+  private toMoneyNumber(value: unknown): number {
+    const parsed =
+      typeof value === 'number' ? value : Number.parseFloat(String(value));
+
+    if (!Number.isFinite(parsed)) {
+      throw new BadRequestException('Invalid amount');
+    }
+
+    return parsed;
+  }
+
+  private roundMoney(value: number): number {
+    return Number.parseFloat(value.toFixed(2));
+  }
 
   /**
    * Get or create wallet for user
@@ -48,17 +67,19 @@ export class WalletService {
    * Add earnings to pending (when order is completed)
    */
   async addPendingEarnings(userId: string, amount: number): Promise<Wallet> {
-    if (amount <= 0) {
+    const normalizedAmount = this.toMoneyNumber(amount);
+
+    if (normalizedAmount <= 0) {
       throw new BadRequestException('Amount must be greater than 0');
     }
 
     const wallet = await this.getOrCreateWallet(userId);
+    const currentPending = this.toMoneyNumber(wallet.pendingEarnings);
+    const currentTotalEarnings = this.toMoneyNumber(wallet.totalEarnings);
 
-    wallet.pendingEarnings = parseFloat(
-      (parseFloat(wallet.pendingEarnings.toString()) + amount).toFixed(2),
-    );
-    wallet.totalEarnings = parseFloat(
-      (parseFloat(wallet.totalEarnings.toString()) + amount).toFixed(2),
+    wallet.pendingEarnings = this.roundMoney(currentPending + normalizedAmount);
+    wallet.totalEarnings = this.roundMoney(
+      currentTotalEarnings + normalizedAmount,
     );
 
     return this.walletRepo.save(wallet);
@@ -67,23 +88,26 @@ export class WalletService {
   /**
    * Move pending earnings to balance (when withdrawal is approved)
    */
-  async approvePendingEarnings(userId: string, amount: number): Promise<Wallet> {
-    if (amount <= 0) {
+  async approvePendingEarnings(
+    userId: string,
+    amount: number,
+  ): Promise<Wallet> {
+    const normalizedAmount = this.toMoneyNumber(amount);
+
+    if (normalizedAmount <= 0) {
       throw new BadRequestException('Amount must be greater than 0');
     }
 
     const wallet = await this.getOrCreateWallet(userId);
+    const currentPending = this.toMoneyNumber(wallet.pendingEarnings);
+    const currentBalance = this.toMoneyNumber(wallet.balance);
 
-    if (parseFloat(wallet.pendingEarnings.toString()) < amount) {
+    if (currentPending < normalizedAmount) {
       throw new BadRequestException('Insufficient pending earnings');
     }
 
-    wallet.pendingEarnings = parseFloat(
-      (parseFloat(wallet.pendingEarnings.toString()) - amount).toFixed(2),
-    );
-    wallet.balance = parseFloat(
-      (parseFloat(wallet.balance.toString()) + amount).toFixed(2),
-    );
+    wallet.pendingEarnings = this.roundMoney(currentPending - normalizedAmount);
+    wallet.balance = this.roundMoney(currentBalance + normalizedAmount);
 
     return this.walletRepo.save(wallet);
   }
@@ -92,24 +116,37 @@ export class WalletService {
    * Withdraw from wallet
    */
   async withdraw(userId: string, amount: number): Promise<Wallet> {
-    if (amount <= 0) {
+    const normalizedAmount = this.toMoneyNumber(amount);
+
+    if (normalizedAmount <= 0) {
       throw new BadRequestException('Amount must be greater than 0');
     }
 
     const wallet = await this.getOrCreateWallet(userId);
+    const currentBalance = this.toMoneyNumber(wallet.balance);
+    const currentTotalWithdrawn = this.toMoneyNumber(wallet.totalWithdrawn);
 
-    if (parseFloat(wallet.balance.toString()) < amount) {
+    if (currentBalance < normalizedAmount) {
       throw new BadRequestException('Insufficient balance');
     }
 
-    wallet.balance = parseFloat(
-      (parseFloat(wallet.balance.toString()) - amount).toFixed(2),
-    );
-    wallet.totalWithdrawn = parseFloat(
-      (parseFloat(wallet.totalWithdrawn.toString()) + amount).toFixed(2),
+    wallet.balance = this.roundMoney(currentBalance - normalizedAmount);
+    wallet.totalWithdrawn = this.roundMoney(
+      currentTotalWithdrawn + normalizedAmount,
     );
 
     return this.walletRepo.save(wallet);
+  }
+
+  /**
+   * Confirm pending earnings (move to balance when order is delivered)
+   * Same as approvePendingEarnings but with clearer naming for delivery flow
+   */
+  async confirmPendingEarnings(
+    userId: string,
+    amount: number,
+  ): Promise<Wallet> {
+    return this.approvePendingEarnings(userId, amount);
   }
 
   /**

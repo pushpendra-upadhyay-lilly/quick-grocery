@@ -25,7 +25,9 @@ export const useLocationStore = create<LocationStore>((set) => ({
   error: null,
 
   setLocation: (location) => set({ currentLocation: location, error: null }),
-  setTracking: (tracking) => set({ isTracking: tracking }),
-  setError: (error) => set({ error }),
-  clearLocation: () => set({ currentLocation: null }),
+  setTracking: (tracking) =>
+    set((state) => (state.isTracking === tracking ? state : { isTracking: tracking })),
+  setError: (error) => set((state) => (state.error === error ? state : { error })),
+  clearLocation: () =>
+    set((state) => (state.currentLocation === null ? state : { currentLocation: null })),
 }));

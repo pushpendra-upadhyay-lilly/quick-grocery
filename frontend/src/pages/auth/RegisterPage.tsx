@@ -196,10 +196,10 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Email or Phone */}
+            {/* Phone Number */}
             <div>
               <label htmlFor="identifier" className="block text-sm font-semibold text-brand-700 mb-2">
-                Email or Phone Number
+                Phone Number
               </label>
               <input
                 id="identifier"
@@ -207,7 +207,7 @@ export default function RegisterPage() {
                 type="text"
                 value={formData.identifier}
                 onChange={handleChange}
-                placeholder="your@email.com or +92 300 1234567"
+                placeholder="9001234567"
                 className={`w-full px-4 py-2 border-2 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 ${
                   errors.identifier
                     ? 'border-red-300 bg-red-50'

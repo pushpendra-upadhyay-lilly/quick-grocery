@@ -114,7 +114,7 @@ export default function LoginPage() {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-brand-700 mb-2">🛒 Login</h1>
           <p className="text-brand-600">
-            {step === 'identifier' ? 'Enter your email or phone' : 'Enter the OTP sent to you'}
+            {step === 'identifier' ? 'Enter your  phone' : 'Enter the OTP sent to you'}
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export default function LoginPage() {
           <form onSubmit={handleRequestOtp} className="space-y-5">
             <div>
               <label htmlFor="identifier" className="block text-sm font-semibold text-brand-700 mb-2">
-                Email or Phone Number
+                Phone Number
               </label>
               <input
                 id="identifier"
@@ -133,12 +133,11 @@ export default function LoginPage() {
                   setIdentifier(e.target.value);
                   setIdentifierError('');
                 }}
-                placeholder="your@email.com or +92 300 1234567"
-                className={`w-full px-4 py-2 border-2 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 ${
-                  identifierError
+                placeholder="9001234567"
+                className={`w-full px-4 py-2 border-2 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 ${identifierError
                     ? 'border-red-300 bg-red-50'
                     : 'border-brand-200 bg-brand-50 focus:border-brand-400'
-                }`}
+                  }`}
               />
               {identifierError && <p className="text-red-600 text-sm mt-1">{identifierError}</p>}
             </div>
@@ -176,11 +175,10 @@ export default function LoginPage() {
                 }}
                 placeholder="000000"
                 maxLength={6}
-                className={`w-full px-4 py-2 border-2 rounded-lg text-center text-2xl tracking-widest transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 ${
-                  otpError
+                className={`w-full px-4 py-2 border-2 rounded-lg text-center text-2xl tracking-widest transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 ${otpError
                     ? 'border-red-300 bg-red-50'
                     : 'border-brand-200 bg-brand-50 focus:border-brand-400'
-                }`}
+                  }`}
               />
               {otpError && <p className="text-red-600 text-sm mt-1">{otpError}</p>}
             </div>
@@ -198,11 +196,10 @@ export default function LoginPage() {
               type="button"
               onClick={handleResendOtp}
               disabled={!canResend || resendOtp.isPending}
-              className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
-                canResend
+              className={`w-full px-4 py-3 rounded-lg font-semibold transition ${canResend
                   ? 'bg-brand-100 text-brand-700 hover:bg-brand-200'
                   : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-              }`}
+                }`}
             >
               {canResend
                 ? resendOtp.isPending

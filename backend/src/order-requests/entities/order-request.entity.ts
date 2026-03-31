@@ -49,7 +49,11 @@ export class OrderRequest {
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   deliveryLongitude: number;
 
-  @Column({ type: 'enum', enum: OrderRequestStatus, default: OrderRequestStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: OrderRequestStatus,
+    default: OrderRequestStatus.PENDING,
+  })
   status: OrderRequestStatus;
 
   @Column({ nullable: true })

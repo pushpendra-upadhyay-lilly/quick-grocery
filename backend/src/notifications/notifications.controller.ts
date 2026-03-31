@@ -26,7 +26,10 @@ export class NotificationsController {
     @Param('id') orderId: string,
     @CurrentUser() user: any,
   ): Promise<Observable<MessageEvent>> {
-    const order = await this.ordersService.getOrderById(orderId, user.id);
+    const order = await this.ordersService.getOrderForParticipant(
+      orderId,
+      user.id,
+    );
     if (!order) {
       throw new BadRequestException('Order not found');
     }

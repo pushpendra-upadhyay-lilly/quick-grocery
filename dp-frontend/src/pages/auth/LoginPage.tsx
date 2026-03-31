@@ -18,19 +18,16 @@ export default function LoginPage() {
   const [otpError, setOtpError] = useState('');
   const [displayOtp, setDisplayOtp] = useState(''); // For showing OTP in dev mode
   const [resendTimer, setResendTimer] = useState(0);
-  const [canResend, setCanResend] = useState(false);
 
   // Timer for resend OTP
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let timeout: number;
     if (resendTimer > 0) {
-      interval = setInterval(() => {
+      timeout = setTimeout(() => {
         setResendTimer((prev) => prev - 1);
       }, 1000);
-    } else if (resendTimer === 0 && step === 'otp') {
-      setCanResend(true);
     }
-    return () => clearInterval(interval);
+    return () => clearTimeout(timeout);
   }, [resendTimer, step]);
 
   const validateIdentifier = () => {
@@ -59,7 +56,6 @@ export default function LoginPage() {
           setDisplayOtp(data.otp || ''); // Show OTP in dev mode
           setStep('otp');
           setResendTimer(30); // Start 30-second countdown
-          setCanResend(false);
           toast.success('OTP sent!');
         },
         onError: () => {
@@ -99,7 +95,6 @@ export default function LoginPage() {
           setDisplayOtp(data.otp || '');
           setOtp(''); // Clear previous OTP input
           setResendTimer(30); // Reset countdown
-          setCanResend(false);
           toast.success('OTP resent!');
         },
       }
@@ -123,18 +118,18 @@ export default function LoginPage() {
         {step === 'identifier' && (
           <form onSubmit={handleRequestOtp} className="space-y-5">
             <div>
-              <label htmlFor="identifier" className="block text-sm font-semibold text-brand-700 mb-2">
-                Email or Phone Number
+              <label htmlFor="phone" className="block text-sm font-semibold text-brand-700 mb-2">
+                Phone Number
               </label>
               <input
-                id="identifier"
+                id="phone"
                 type="text"
                 value={identifier}
                 onChange={(e) => {
                   setIdentifier(e.target.value);
                   if (identifierError) setIdentifierError('');
                 }}
-                placeholder="your@email.com or +92 3001234567"
+                placeholder="9876543210"
                 className={`w-full px-4 py-2 border-2 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 ${
                   identifierError
                     ? 'border-red-300 bg-red-50'
@@ -201,14 +196,14 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleResendOtp}
-              disabled={!canResend || resendOtp.isPending}
+              disabled={resendTimer > 0 || resendOtp.isPending}
               className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
-                canResend
+                resendTimer <= 0
                   ? 'bg-brand-100 text-brand-700 hover:bg-brand-200'
                   : 'bg-gray-100 text-gray-500 cursor-not-allowed'
               }`}
             >
-              {canResend
+              {resendTimer <= 0
                 ? resendOtp.isPending
                   ? 'Resending...'
                   : 'Resend OTP'

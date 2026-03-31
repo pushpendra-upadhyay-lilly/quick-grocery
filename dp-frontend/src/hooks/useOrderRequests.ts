@@ -1,17 +1,49 @@
 import { useEffect } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useOrderStore } from '../stores/orderStore';
+import type { OrderRequest } from '../stores/orderStore';
 import { useAuthStore } from '../stores/authStore';
 import apiClient from '../lib/apiClient';
+import { toDateOrNow, toNumber, toOptionalNumber } from '../lib/parsers';
 
 interface OrderRequestsResponse {
   type: string;
-  data?: any;
+  data?: unknown;
   message?: string;
   count?: number;
-  requests?: any[];
+  requests?: unknown[];
   timestamp?: string;
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isOrderRequest = (req: OrderRequest | null): req is OrderRequest =>
+  req !== null;
+
+const normalizeOrderRequest = (
+  request: Record<string, unknown>,
+): OrderRequest | null => {
+  const id = typeof request.id === 'string' ? request.id : undefined;
+  const orderId =
+    typeof request.orderId === 'string' ? request.orderId : undefined;
+
+  if (!id || !orderId) {
+    return null;
+  }
+
+  return {
+    id,
+    orderId,
+    deliveryFee: toNumber(request.deliveryFee, 0),
+    pickupLatitude: toOptionalNumber(request.pickupLatitude),
+    pickupLongitude: toOptionalNumber(request.pickupLongitude),
+    deliveryLatitude: toOptionalNumber(request.deliveryLatitude),
+    deliveryLongitude: toOptionalNumber(request.deliveryLongitude),
+    expiresAt: toDateOrNow(request.expiresAt),
+    createdAt: toDateOrNow(request.createdAt),
+  };
+};
 
 /**
  * Listen to order requests via SSE
@@ -35,7 +67,13 @@ export const useOrderRequests = () => {
         if (message.type === 'connected') {
           console.log('✓ Connected to order request stream');
         } else if (message.type === 'order_request' && message.data) {
-          setPendingOrders(message.data);
+          const requests = Array.isArray(message.data)
+            ? message.data
+                .filter(isRecord)
+                .map(normalizeOrderRequest)
+              .filter(isOrderRequest)
+            : [];
+          setPendingOrders(requests);
         } else if (message.type === 'error') {
           console.error('Order stream error:', message.message);
         }
@@ -61,7 +99,15 @@ export const usePendingOrderRequests = () => {
     queryKey: ['orders', 'pending'],
     queryFn: async () => {
       const response = await apiClient.get('/order-requests/pending');
-      return response.data;
+      return {
+        ...response.data,
+        requests: Array.isArray(response.data?.requests)
+          ? response.data.requests
+              .filter(isRecord)
+              .map(normalizeOrderRequest)
+              .filter(isOrderRequest)
+          : [],
+      };
     },
     refetchInterval: 10 * 1000, // Refetch every 10 seconds as fallback
   });
@@ -72,6 +118,7 @@ export const usePendingOrderRequests = () => {
  */
 export const useAcceptOrder = () => {
   const { acceptOrder } = useOrderStore();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (orderRequestId: string) => {
@@ -80,8 +127,14 @@ export const useAcceptOrder = () => {
       );
       return response.data;
     },
-    onSuccess: (_data, orderRequestId) => {
+    onSuccess: async (_data, orderRequestId) => {
       acceptOrder(orderRequestId);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['deliveries'] }),
+        queryClient.invalidateQueries({ queryKey: ['orders', 'pending'] }),
+        queryClient.invalidateQueries({ queryKey: ['wallet'] }),
+        queryClient.invalidateQueries({ queryKey: ['wallet', 'balance'] }),
+      ]);
     },
   });
 };
@@ -91,6 +144,7 @@ export const useAcceptOrder = () => {
  */
 export const useDeclineOrder = () => {
   const { removePendingOrder } = useOrderStore();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (orderRequestId: string) => {
@@ -99,8 +153,9 @@ export const useDeclineOrder = () => {
       );
       return response.data;
     },
-    onSuccess: (_data, orderRequestId) => {
+    onSuccess: async (_data, orderRequestId) => {
       removePendingOrder(orderRequestId);
+      await queryClient.invalidateQueries({ queryKey: ['orders', 'pending'] });
     },
   });
 };

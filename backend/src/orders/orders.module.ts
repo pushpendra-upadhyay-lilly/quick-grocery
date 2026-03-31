@@ -5,13 +5,17 @@ import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { CartModule } from '../cart/cart.module';
 import { ProductsModule } from '../products/products.module';
+import { WalletModule } from '../wallet/wallet.module';
 import { Address } from '../users/entities/address.entity';
+import { Location } from '../location/entities/location.entity';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem, OrderStatusEvent, Address]),
+    TypeOrmModule.forFeature([Order, OrderItem, OrderStatusEvent, Address, Location, User]),
     CartModule,
     ProductsModule,
+    WalletModule,
   ],
   providers: [OrdersService],
   controllers: [OrdersController],

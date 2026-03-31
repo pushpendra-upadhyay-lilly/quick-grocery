@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import apiClient from '../lib/apiClient';
 import { useAuthStore } from '../stores/authStore';
-import type { OrderStatus } from './useOrderTracking';
+import type { OrderStatus } from '../constants/orderStatus';
 
 export interface Order {
   id: string;
-  status: 'placed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  status: OrderStatus;
   totalAmount: number;
   addressSnapshot: {
     line1: string;

@@ -1,10 +1,8 @@
-import { useOrderRequests } from '../hooks/useOrderRequests';
 import { useOrderStore } from '../stores/orderStore';
 import OrderRequestCard from './OrderRequestCard';
 
 export default function OrderRequestListener() {
   const { pendingOrders } = useOrderStore();
-  useOrderRequests(); // Start listening to SSE
 
   if (pendingOrders.length === 0) {
     return (

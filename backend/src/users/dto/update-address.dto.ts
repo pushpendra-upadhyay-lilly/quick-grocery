@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsPhoneNumber } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsPhoneNumber, IsNumber } from 'class-validator';
 
 export class UpdateAddressDto {
   @IsOptional()
@@ -24,6 +24,14 @@ export class UpdateAddressDto {
   @IsNotEmpty()
   @IsPhoneNumber()
   phone: string;
+
+  @IsOptional()
+  @IsNumber()
+  latitude: number;
+
+  @IsOptional()
+  @IsNumber()
+  longitude: number;
 
   @IsOptional()
   isDefault: boolean;

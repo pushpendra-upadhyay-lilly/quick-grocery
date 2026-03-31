@@ -3,8 +3,13 @@ import OrderDetails from '../components/OrderDetails';
 import OrderStatusTimeline from '../components/OrderStatusTimeline';
 import { useNavbarHeading } from '../hooks/useNavbarHeading';
 import { useOrder } from '../hooks/useOrders';
-import type { OrderStatus } from '../hooks/useOrderTracking';
 import { useOrderTracking } from '../hooks/useOrderTracking';
+import {
+  COMPLETED_ORDER_FINAL_STATUSES,
+  CUSTOMER_ACTIVE_TRACKING_STATUSES,
+  CUSTOMER_CANCELLED_TRACKING_STATUSES,
+  type OrderStatus,
+} from '../constants/orderStatus';
 
 export default function OrderTrackingPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,11 +22,17 @@ export default function OrderTrackingPage() {
   if (isLoading) return <div className="text-brand-600">Loading order...</div>;
   if (!order) return <div className="text-brand-600">Order not found</div>;
 
-  const allEvents = [...(order.statusHistory || []), ...statusEvents];
+  const allEvents = [...(order.statusHistory || []), ...statusEvents]
+    .filter((event) => Boolean(event?.status && event?.timestamp))
+    .sort((a, b) => {
+      const aTime = new Date(a.timestamp).getTime();
+      const bTime = new Date(b.timestamp).getTime();
+      return aTime - bTime;
+    });
+
   const latestEvent = allEvents[allEvents.length - 1];
   const currentStatus = latestEvent?.status || order.status;
-  
-  console.log('Order:', order.completed);
+
   // If order is completed, only show final status
   if (order.completed) {
     return (
@@ -31,7 +42,7 @@ export default function OrderTrackingPage() {
         <OrderStatusTimeline
           currentStatus={currentStatus}
           allEvents={allEvents}
-          finalStatuses={['delivered', 'cancelled']}
+          finalStatuses={COMPLETED_ORDER_FINAL_STATUSES}
           isCompleted={true}
         />
 
@@ -43,8 +54,8 @@ export default function OrderTrackingPage() {
 
   // Build statuses array based on current status
   const finalStatuses2: OrderStatus[] = currentStatus === 'cancelled'
-    ? ['placed', 'cancelled']
-    : ['placed', 'preparing', 'out_for_delivery', 'delivered'];
+    ? CUSTOMER_CANCELLED_TRACKING_STATUSES
+    : CUSTOMER_ACTIVE_TRACKING_STATUSES;
 
   return (
     <div className="max-w-2xl mx-auto">

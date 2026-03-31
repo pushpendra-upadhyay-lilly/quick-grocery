@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLocationStore, type Location } from '../stores/locationStore';
 import apiClient from '../lib/apiClient';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { getApiErrorMessage } from '../lib/parsers';
 
 const LOCATION_UPDATE_INTERVAL = 30 * 1000; // 30 seconds
 const LOCATION_TIMEOUT = 10 * 1000; // 10 seconds
@@ -9,11 +10,16 @@ const LOCATION_TIMEOUT = 10 * 1000; // 10 seconds
 /**
  * Use geolocation API to track GPS position every 30 seconds
  */
-export const useLocationTracking = () => {
+export const useLocationTracking = (enabled = true) => {
   const { setLocation, setTracking, setError } = useLocationStore();
   const watchIdRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      setTracking(false);
+      return;
+    }
+
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser');
       return;
@@ -62,7 +68,7 @@ export const useLocationTracking = () => {
       clearInterval(intervalId);
       setTracking(false);
     };
-  }, [setLocation, setTracking, setError]);
+  }, [enabled, setLocation, setTracking, setError]);
 };
 
 /**
@@ -79,8 +85,11 @@ export const useUpdateLocation = () => {
       });
       return response.data;
     },
-    onError: (error: any) => {
-      console.error('Failed to update location:', error?.response?.data?.message);
+    onError: (error: unknown) => {
+      console.error(
+        'Failed to update location:',
+        getApiErrorMessage(error, 'Unknown location update error'),
+      );
     },
   });
 };

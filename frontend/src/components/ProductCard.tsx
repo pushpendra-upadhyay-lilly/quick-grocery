@@ -20,7 +20,8 @@ export default function ProductCard({ product, onAddToCart, isAddingToCart = fal
   const cartItem = items.find((item) => item.productId === product.slug);
 
   // Handle add to cart with blink effect
-  const handleAddClick = () => {
+  const handleAddClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
     setIsBlinking(true);
     onAddToCart(product);
     // Remove blink after animation completes
@@ -38,7 +39,7 @@ export default function ProductCard({ product, onAddToCart, isAddingToCart = fal
   };
 
   return (
-    <div className="bg-brand-50 shadow-md border-brand-100 rounded-lg overflow-visible hover:shadow-lg hover:border-brand-400 transition">
+    <Link to={`/products/${product.slug}`} className="bg-brand-50 shadow-md border-brand-100 rounded-lg overflow-visible hover:shadow-lg hover:border-brand-400 transition">
       <div className="relative">
         <img src={product.imageUrl} alt={product.name} className={`w-full ${small ? 'h-20' : 'h-40'} object-cover bg-gray-200 rounded-t-lg`} />
         {!small && (
@@ -67,9 +68,9 @@ export default function ProductCard({ product, onAddToCart, isAddingToCart = fal
         )}
       </div>
       <div className={`${small ? 'p-2' : 'pt-6 pb-3 px-3'}`}>
-        <Link to={`/products/${product.slug}`} className={`text-black ${small ? 'text-sm' : 'text-md'}`}>
+        <span className={`text-black ${small ? 'text-sm' : 'text-md'}`}>
           {product.name}
-        </Link>
+        </span>
         {!small && (
           <>
             <p className="text-sm text-brand-600 mt-1">{product.unit}</p>
@@ -83,6 +84,6 @@ export default function ProductCard({ product, onAddToCart, isAddingToCart = fal
           </>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

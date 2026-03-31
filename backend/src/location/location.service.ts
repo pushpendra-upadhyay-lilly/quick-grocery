@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { Location } from './entities/location.entity';
+
+const LOCATION_HEARTBEAT_TIMEOUT_MS = 30_000;
 
 export interface UpdateLocationDto {
   latitude: number;
@@ -42,6 +44,7 @@ export class LocationService {
       location.longitude = data.longitude;
       location.accuracy = data.accuracy || 0;
       location.speed = data.speed || 0;
+      location.isTracking = true;
       location.updatedAt = new Date();
     }
 
@@ -76,6 +79,25 @@ export class LocationService {
       });
     } else {
       location.isTracking = true;
+      location.updatedAt = new Date();
+    }
+
+    await this.locationRepo.save(location);
+  }
+
+  async heartbeat(userId: string): Promise<void> {
+    let location = await this.locationRepo.findOne({ where: { userId } });
+
+    if (!location) {
+      location = this.locationRepo.create({
+        userId,
+        latitude: 0,
+        longitude: 0,
+        isTracking: true,
+      });
+    } else {
+      location.isTracking = true;
+      location.updatedAt = new Date();
     }
 
     await this.locationRepo.save(location);
@@ -98,7 +120,12 @@ export class LocationService {
    */
   async getAllActiveLocations(): Promise<Location[]> {
     return this.locationRepo.find({
-      where: { isTracking: true },
+      where: {
+        isTracking: true,
+        updatedAt: MoreThan(
+          new Date(Date.now() - LOCATION_HEARTBEAT_TIMEOUT_MS),
+        ),
+      },
     });
   }
 }

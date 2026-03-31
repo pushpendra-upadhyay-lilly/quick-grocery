@@ -11,9 +11,11 @@ import {
 import { User } from '../../users/entities/user.entity';
 
 export enum OrderStatus {
-  PLACED = 'placed',
-  PREPARING = 'preparing',
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  GOING_FOR_PICKUP = 'going_for_pickup',
   OUT_FOR_DELIVERY = 'out_for_delivery',
+  REACHED = 'reached',
   DELIVERED = 'delivered',
   CANCELLED = 'cancelled',
 }
@@ -26,10 +28,17 @@ export class Order {
   @Column()
   userId: string;
 
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'deliveryPartnerId' })
+  deliveryPartner: User;
+
+  @Column({ nullable: true })
+  deliveryPartnerId: string;
+
   @Column({
     type: 'enum',
     enum: OrderStatus,
-    default: OrderStatus.PLACED,
+    default: OrderStatus.PENDING,
   })
   status: OrderStatus;
 
@@ -41,6 +50,12 @@ export class Order {
     postcode: string;
   };
 
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  deliveryLatitude: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  deliveryLongitude: number;
+
   @Column({
     type: 'decimal',
     precision: 10,
@@ -51,6 +66,9 @@ export class Order {
     }
   })
   totalAmount: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  deliveryFee: number;
 
   @Column({ default: false })
   completed: boolean;

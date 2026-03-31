@@ -1,16 +1,21 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useAcceptOrder, useDeclineOrder } from '../hooks/useOrderRequests';
 import toast from 'react-hot-toast';
+import {
+  getApiErrorMessage,
+  toDateOrNow,
+  toOptionalNumber,
+} from '../lib/parsers';
 
 interface OrderRequestCardProps {
   id: string;
   orderId: string;
-  deliveryFee: number;
+  deliveryFee: number | string;
   expiresAt: Date | string;
-  pickupLatitude?: number;
-  pickupLongitude?: number;
-  deliveryLatitude?: number;
-  deliveryLongitude?: number;
+  pickupLatitude?: number | string;
+  pickupLongitude?: number | string;
+  deliveryLatitude?: number | string;
+  deliveryLongitude?: number | string;
 }
 
 export default function OrderRequestCard({
@@ -25,23 +30,39 @@ export default function OrderRequestCard({
 }: OrderRequestCardProps) {
   const acceptOrder = useAcceptOrder();
   const declineOrder = useDeclineOrder();
+  const [timeRemaining, setTimeRemaining] = useState('Expired');
 
-  const timeRemaining = useMemo(() => {
-    const expiryTime = new Date(expiresAt).getTime();
-    const now = Date.now();
-    const seconds = Math.floor((expiryTime - now) / 1000);
+  useEffect(() => {
+    const expiryTime = toDateOrNow(expiresAt).getTime();
 
-    if (seconds <= 0) return 'Expired';
-    if (seconds < 60) return `${seconds}s`;
-    return `${Math.floor(seconds / 60)}m`;
+    const updateTimeRemaining = () => {
+      const now = Date.now();
+      const seconds = Math.floor((expiryTime - now) / 1000);
+
+      if (seconds <= 0) {
+        setTimeRemaining('Expired');
+        return;
+      }
+
+      if (seconds < 60) {
+        setTimeRemaining(`${seconds}s`);
+        return;
+      }
+
+      setTimeRemaining(`${Math.floor(seconds / 60)}m`);
+    };
+
+    updateTimeRemaining();
+    const timer = window.setInterval(updateTimeRemaining, 1000);
+    return () => window.clearInterval(timer);
   }, [expiresAt]);
 
   const handleAccept = async () => {
     try {
       await acceptOrder.mutateAsync(id);
       toast.success('Order accepted! ✓');
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to accept order');
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, 'Failed to accept order'));
     }
   };
 
@@ -49,12 +70,21 @@ export default function OrderRequestCard({
     try {
       await declineOrder.mutateAsync(id);
       toast.error('Order declined');
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to decline order');
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, 'Failed to decline order'));
     }
   };
 
   const isExpired = timeRemaining === 'Expired';
+  const feeValue = toOptionalNumber(deliveryFee) ?? 0;
+
+  const pickupLat = toOptionalNumber(pickupLatitude);
+  const pickupLng = toOptionalNumber(pickupLongitude);
+  const deliveryLat = toOptionalNumber(deliveryLatitude);
+  const deliveryLng = toOptionalNumber(deliveryLongitude);
+
+  const hasPickupCoords = pickupLat !== undefined && pickupLng !== undefined;
+  const hasDeliveryCoords = deliveryLat !== undefined && deliveryLng !== undefined;
 
   return (
     <div
@@ -72,7 +102,7 @@ export default function OrderRequestCard({
         </div>
         <div className="text-right">
           <p className={`text-2xl font-bold ${isExpired ? 'text-red-600' : 'text-green-600'}`}>
-            ₹{deliveryFee.toFixed(2)}
+            ₹{feeValue.toFixed(2)}
           </p>
           <p className={`text-xs font-semibold ${isExpired ? 'text-red-600' : 'text-blue-600'}`}>
             {timeRemaining}
@@ -81,19 +111,19 @@ export default function OrderRequestCard({
       </div>
 
       {/* Location Info */}
-      {(pickupLatitude || deliveryLatitude) && (
+      {(hasPickupCoords || hasDeliveryCoords) && (
         <div className="mb-3 p-2 bg-white rounded border border-brand-200">
           <div className="text-xs space-y-1">
-            {pickupLatitude && (
+            {hasPickupCoords && (
               <p>
                 <span className="font-semibold">📍 Pickup:</span>{' '}
-                {pickupLatitude.toFixed(4)}, {pickupLongitude?.toFixed(4)}
+                {pickupLat.toFixed(4)}, {pickupLng.toFixed(4)}
               </p>
             )}
-            {deliveryLatitude && (
+            {hasDeliveryCoords && (
               <p>
                 <span className="font-semibold">🚚 Delivery:</span>{' '}
-                {deliveryLatitude.toFixed(4)}, {deliveryLongitude?.toFixed(4)}
+                {deliveryLat.toFixed(4)}, {deliveryLng.toFixed(4)}
               </p>
             )}
           </div>

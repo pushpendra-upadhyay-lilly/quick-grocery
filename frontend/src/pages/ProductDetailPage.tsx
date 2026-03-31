@@ -1,12 +1,18 @@
 import { useParams } from 'react-router-dom';
 import { useProduct } from '../hooks/useProducts';
-import { useAddToCart } from '../hooks/useCart';
+import { useAddToCart, useUpdateCartQuantity, useRemoveFromCart } from '../hooks/useCart';
+import { useCartStore } from '../stores/cartStore';
+import ItemQuantity from '../components/ItemQuantity';
 import toast from 'react-hot-toast';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading } = useProduct(slug || '');
   const addToCart = useAddToCart();
+  const updateQuantity = useUpdateCartQuantity();
+  const removeFromCart = useRemoveFromCart();
+  const cartItem = useCartStore((s) => s.items.find((i) => i.productId === slug));
+  const cartQty = cartItem?.quantity ?? 0;
 
   const handleAddToCart = () => {
     if (product) {
@@ -46,13 +52,28 @@ export default function ProductDetailPage() {
           <p className="text-sm text-brand-700"><strong>In Stock:</strong> {product.inStock ? `${product.stockQty} available` : 'Out of stock'}</p>
         </div>
 
-        <button
-          onClick={handleAddToCart}
-          disabled={!product.inStock || addToCart.isPending}
-          className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-brand-700 disabled:bg-gray-300"
-        >
-          {addToCart.isPending ? 'Adding...' : product.inStock ? 'Add to Cart' : 'Out of Stock'}
-        </button>
+        {cartQty > 0 ? (
+          <ItemQuantity
+            quantity={cartQty}
+            onQuantityChange={(qty) => {
+              if (qty === 0) {
+                removeFromCart.mutate(product.slug);
+              } else {
+                updateQuantity.mutate({ productId: product.slug, quantity: qty });
+              }
+            }}
+            isLoading={updateQuantity.isPending || removeFromCart.isPending}
+            minQuantity={0}
+          />
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={!product.inStock || addToCart.isPending}
+            className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-brand-700 disabled:bg-gray-300"
+          >
+            {addToCart.isPending ? 'Adding...' : product.inStock ? 'Add to Cart' : 'Out of Stock'}
+          </button>
+        )}
       </div>
     </div>
   );

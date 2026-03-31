@@ -24,7 +24,7 @@ export default function CheckoutPage() {
     try {
       const order = await createOrder.mutateAsync({ addressId });
       clearCart();
-      toast.success('Order Placed Successfully!');
+      toast.success('Order created successfully!');
       navigate(`/orders/${order.id}`);
     } catch (err) {
       toast.error('Failed to place order');

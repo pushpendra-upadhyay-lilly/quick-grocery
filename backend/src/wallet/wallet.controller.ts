@@ -16,7 +16,8 @@ export class WalletController {
   @Get('balance')
   @UseGuards(JwtAuthGuard)
   async getBalance(@CurrentUser() user: any) {
-    const wallet = await this.walletService.getWallet(user.id);
+    // New users may not have a wallet row yet, so create one on first read.
+    const wallet = await this.walletService.getOrCreateWallet(user.id);
     return {
       balance: wallet.balance,
       totalEarnings: wallet.totalEarnings,
