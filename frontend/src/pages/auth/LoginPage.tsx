@@ -109,7 +109,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-brand-50 to-brand-100">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+      <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-lg p-8">
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-brand-700 mb-2">🛒 Login</h1>
@@ -135,7 +135,7 @@ export default function LoginPage() {
                 }}
                 placeholder="9001234567"
                 className={`w-full px-4 py-2 border-2 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 ${identifierError
-                    ? 'border-red-300 bg-red-50'
+                    ? 'border-red-700 bg-red-950'
                     : 'border-brand-200 bg-brand-50 focus:border-brand-400'
                   }`}
               />
@@ -145,7 +145,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={login.isPending}
-              className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition mt-6"
+              className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition mt-6"
             >
               {login.isPending ? 'Sending OTP...' : 'Send OTP'}
             </button>
@@ -154,8 +154,8 @@ export default function LoginPage() {
           // Step 2: OTP Verification
           <form onSubmit={handleVerifyOtp} className="space-y-5">
             {displayOtp && (
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-sm font-medium text-blue-800">
+              <div className="bg-blue-950 border-2 border-blue-800 rounded-lg p-4 mb-4">
+                <p className="text-sm font-medium text-blue-300">
                   📌 Development Mode - OTP: <span className="font-bold text-lg">{displayOtp}</span>
                 </p>
               </div>
@@ -176,7 +176,7 @@ export default function LoginPage() {
                 placeholder="000000"
                 maxLength={6}
                 className={`w-full px-4 py-2 border-2 rounded-lg text-center text-2xl tracking-widest transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 ${otpError
-                    ? 'border-red-300 bg-red-50'
+                    ? 'border-red-700 bg-red-950'
                     : 'border-brand-200 bg-brand-50 focus:border-brand-400'
                   }`}
               />
@@ -186,7 +186,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={verifyOtp.isPending}
-              className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition mt-6"
+              className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition mt-6"
             >
               {verifyOtp.isPending ? 'Verifying...' : 'Verify & Login'}
             </button>
@@ -198,7 +198,7 @@ export default function LoginPage() {
               disabled={!canResend || resendOtp.isPending}
               className={`w-full px-4 py-3 rounded-lg font-semibold transition ${canResend
                   ? 'bg-brand-100 text-brand-700 hover:bg-brand-200'
-                  : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                 }`}
             >
               {canResend

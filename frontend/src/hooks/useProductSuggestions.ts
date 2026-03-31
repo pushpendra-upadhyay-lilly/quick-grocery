@@ -1,13 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import type { SuggestionProduct } from '../interfaces/products';
 import apiClient from '../lib/apiClient';
-
-interface SuggestionProduct {
-  _id: string;
-  name: string;
-  slug: string;
-  imageUrl: string;
-  price: number;
-}
 
 export function useProductSuggestions(query: string, limit = 8) {
   return useQuery({
@@ -16,7 +9,7 @@ export function useProductSuggestions(query: string, limit = 8) {
       if (!query || query.length < 2) {
         return [];
       }
-      const response = await apiClient.get<SuggestionProduct[]>('/products', {
+      const response = await apiClient.get<{data: SuggestionProduct[]}>('/products', {
         params: {
           search: query,
           limit,

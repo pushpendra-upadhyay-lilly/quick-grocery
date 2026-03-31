@@ -34,7 +34,7 @@ export default function CategorySidebar({
   }, [categories,onCategorySelect]);
 
   return (
-    <div className="w-24 flex-shrink-0 -ml-4 -mt-2 shadow-md">
+    <div className="w-20 flex-shrink-0 -ml-4 -mt-2 shadow-md">
       <div className="bg-brand-50 p-0 sticky max-h-[calc(100vh-48px)] overflow-y-auto br-1 border-brand-200">
         <div className="space-y-0">
 
@@ -53,7 +53,7 @@ export default function CategorySidebar({
                 <img
                   src={category.imageUrl}
                   alt={category.name}
-                  className="w-10 h-10 inline-block mb-1 object-cover"
+                  className="w-8 h-8 inline-block mb-1 object-cover"
                 />
               )}
               <br/>

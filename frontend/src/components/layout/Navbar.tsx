@@ -8,14 +8,14 @@ export default function Navbar() {
   const location = useLocation();
   const { user } = useAuthStore();
   const { itemCount } = useCartStore();
-  const customHeading = useNavbarStore((s) => s.customHeading);
+  const { customHeading, customSubHeading } = useNavbarStore((s) => s);
 
   const isHome = location.pathname === '/';
 
 
   return (
     <nav className="bg-brand-600 text-white z-50 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Left: Logo or Back Button with Heading */}
         <div className="flex items-center gap-3">
           {isHome ? (
@@ -31,7 +31,10 @@ export default function Navbar() {
               >
                 ←
               </button>
+              <div>
               {customHeading && <h1 className="text-lg font-semibold">{customHeading}</h1>}
+              {customSubHeading && <h2 className="text-sm font-small">{customSubHeading}</h2>}
+              </div>
             </>
           )}
         </div>

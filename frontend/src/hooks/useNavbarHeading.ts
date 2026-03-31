@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
 import { useNavbarStore } from '../stores/navbarStore';
 
-export function useNavbarHeading(heading: string) {
-  const setCustomHeading = useNavbarStore((s) => s.setCustomHeading);
+export function useNavbarHeading(heading: string, subHeading: string | null = null) {
+  const setCustomHeading = useNavbarStore((s) => s.setCustomHeadings);
 
   useEffect(() => {
-    setCustomHeading(heading);
+    setCustomHeading(heading, subHeading);
 
     // Cleanup: reset heading when component unmounts
     return () => {
-      setCustomHeading(null);
+      setCustomHeading(null, null);
     };
-  }, [heading, setCustomHeading]);
+  }, [heading, subHeading, setCustomHeading]);
 }

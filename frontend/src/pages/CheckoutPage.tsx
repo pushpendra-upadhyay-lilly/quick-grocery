@@ -108,7 +108,7 @@ export default function CheckoutPage() {
           <button
             onClick={handlePay}
             disabled={createOrder.isPending || !selectedAddressId}
-            className="w-full mt-6 bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="w-full mt-6 bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             {createOrder.isPending ? 'Processing...' : '💳 Pay Now'}
           </button>

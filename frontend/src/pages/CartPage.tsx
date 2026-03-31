@@ -36,13 +36,13 @@ export default function CartPage() {
         <div className="space-y-2">
           {items.map((item) => (
             <div key={item.productId} className="bg-brand-50 shadow-sm p-4 flex gap-4 hover:border-brand-400">
-              <img src={item.imageUrl} alt={item.name} className="w-24 h-24 object-cover rounded bg-gray-200" />
+              <img src={item.imageUrl} alt={item.name} className="w-24 h-24 object-cover rounded bg-gray-700" />
               <div className="flex-1">
                 <h3 className="font-bold text-brand-800">{item.name}</h3>
                 <p className="text-sm text-brand-600">{item.unit}</p>
                 <p className="font-bold text-brand-700 mt-2">Rs. {item.price.toFixed(2)}</p>
               </div>
-              <div className="flex flex-col items-end justify-between">
+              <div className="relative flex flex-col items-end justify-between">
                 <button
                   onClick={() => removeFromCart.mutate(item.productId)}
                   disabled={removeFromCart.isPending}

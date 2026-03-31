@@ -3,10 +3,11 @@ import { useState } from 'react';
 import { useCartStore } from '../stores/cartStore';
 import ItemQuantity from './ItemQuantity';
 import { useUpdateCartQuantity } from '../hooks/useCart';
+import type { Product } from '../interfaces/products';
 
 interface ProductCardProps {
-  product: any;
-  onAddToCart: (product: any) => void;
+  product: Product;
+  onAddToCart: (product: Product) => void;
   isAddingToCart?: boolean;
   small?: boolean;
 }
@@ -42,48 +43,40 @@ export default function ProductCard({ product, onAddToCart, isAddingToCart = fal
   return (
     <Link to={`/products/${product.slug}`} className="rounded-lg overflow-visible transition">
       <div className="relative">
-        <img src={product.imageUrl} alt={product.name} className={`w-full ${small ? 'h-20' : 'h-40'} object-cover bg-gray-200 rounded-lg shadow-md`} />
+        <img src={product.imageUrl} alt={product.name} className={`w-full ${small ? 'h-20' : 'h-40'} object-cover bg-gray-700 rounded-lg shadow-md`} />
         {!small && (
-          <>
+          <div className='absolute bottom-0 right-2 translate-y-1/4'>
             {cartItem ? (
-              // Show ItemQuantity if item is in cart
-              <div
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className={`absolute bottom-0 right-2 translate-y-1/4 bg-white rounded p-2 shadow-md ${isBlinking ? 'animate-blink' : ''}`}
-              >
                 <ItemQuantity
                   quantity={cartItem.quantity}
                   onQuantityChange={handleQuantityChange}
                   isLoading={updateQuantity.isPending}
                   minQuantity={0}
+                  isBlinking={isBlinking}
                 />
-              </div>
             ) : (
               // Show Add button if item is not in cart
               <button
                 onClick={handleAddClick}
                 disabled={isAddingToCart}
-                className={`absolute bottom-0 right-2 translate-y-1/4 px-4 py-2 bg-brand-600 text-white rounded font-medium hover:bg-brand-700 disabled:bg-gray-300 shadow-md hover:shadow-lg transition text-sm ${isBlinking ? 'animate-blink' : ''}`}
+                className={`px-4 py-2 border-2 bg-gray-900 border-brand-600 text-brand-600 rounded-lg font-medium hover:bg-brand-700 disabled:bg-gray-600 shadow-md hover:shadow-lg transition text-sm ${isBlinking ? 'animate-blink' : ''}`}
               >
                 {isAddingToCart ? 'Adding...' : product.inStock ? 'Add' : 'Notify'}
               </button>
             )}
-          </>
+          </div>
         )}
       </div>
-      <div className={`${small ? 'p-2' : 'pt-6 pb-3 px-0'}`}>
-        <p className="text-xs text-brand-600 mt-1">{product.unit}</p>
-        <span className={`text-black ${small ? 'text-sm' : 'text-md'}`}>
-          {product.brand}&nbsp;{product.name}
-        </span>
+      <div className={`${small ? 'p-2' : 'pt-4 pb-3 px-0'}`}>
+        <span className="text-[10px] text-brand-600 mt-1 border border-gray-600 inline-block p-1 rounded">{product.unit}</span>
+        <p className={`text-gray-100 wrap-normal ${small ? 'text-sm' : 'text-md'}`}>
+          {product.brand}{" "}{product.name}
+        </p>
         {!small && (
           <div className='mt-1'>
-              <p className="font-bold text-sm text-black">Rs. {product.price.toFixed(2)}</p>
+              <p className="font-bold text-sm text-gray-100">Rs. {product.price.toFixed(2)}</p>
               {product.comparePrice && (
-                <p className="line-through text-black text-xs">Rs. {product.comparePrice.toFixed(2)}</p>
+                <p className="line-through text-gray-400 text-xs">Rs. {product.comparePrice.toFixed(2)}</p>
               )}
           </div>
         )}

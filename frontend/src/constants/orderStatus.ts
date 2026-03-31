@@ -58,21 +58,21 @@ export const ORDER_STATUS_ICONS: Record<OrderStatus, string> = {
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, OrderStatusColor> = {
-  pending: { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-800' },
-  accepted: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800' },
+  pending: { bg: 'bg-gray-800', border: 'border-gray-600', text: 'text-gray-300' },
+  accepted: { bg: 'bg-blue-950', border: 'border-blue-800', text: 'text-blue-300' },
   going_for_pickup: {
-    bg: 'bg-yellow-50',
-    border: 'border-yellow-200',
-    text: 'text-yellow-800',
+    bg: 'bg-yellow-950',
+    border: 'border-yellow-800',
+    text: 'text-yellow-300',
   },
   out_for_delivery: {
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    text: 'text-orange-800',
+    bg: 'bg-orange-950',
+    border: 'border-orange-800',
+    text: 'text-orange-300',
   },
-  reached: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-800' },
-  delivered: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800' },
-  cancelled: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800' },
+  reached: { bg: 'bg-indigo-950', border: 'border-indigo-800', text: 'text-indigo-300' },
+  delivered: { bg: 'bg-green-950', border: 'border-green-800', text: 'text-green-300' },
+  cancelled: { bg: 'bg-red-950', border: 'border-red-800', text: 'text-red-300' },
 };
 
 export const CUSTOMER_ACTIVE_TRACKING_STATUSES: OrderStatus[] = [

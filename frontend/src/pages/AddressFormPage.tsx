@@ -213,18 +213,18 @@ export default function AddressFormPage() {
         </div>
 
         {/* Location Coordinates */}
-        <div className="bg-white p-3 rounded border-2 border-blue-200">
-          <p className="text-sm font-semibold text-blue-700 mb-2">📍 Location Coordinates</p>
+        <div className="bg-gray-800 p-3 rounded border-2 border-blue-800">
+          <p className="text-sm font-semibold text-blue-300 mb-2">📍 Location Coordinates</p>
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <p className="text-gray-600 font-semibold">Latitude</p>
-              <p className="text-blue-600 font-mono">
+              <p className="text-gray-400 font-semibold">Latitude</p>
+              <p className="text-blue-400 font-mono">
                 {formData.latitude ? formData.latitude.toFixed(6) : 'Not set'}
               </p>
             </div>
             <div>
-              <p className="text-gray-600 font-semibold">Longitude</p>
-              <p className="text-blue-600 font-mono">
+              <p className="text-gray-400 font-semibold">Longitude</p>
+              <p className="text-blue-400 font-mono">
                 {formData.longitude ? formData.longitude.toFixed(6) : 'Not set'}
               </p>
             </div>
@@ -250,7 +250,7 @@ export default function AddressFormPage() {
           >
             📍 {formData.latitude ? 'Change Location' : 'Pin Location on Map'}
           </button>
-          <p className="text-xs text-gray-600 mt-2">
+          <p className="text-xs text-gray-400 mt-2">
             {formData.latitude
               ? '✓ Location pinned. Click to change.'
               : 'Click to use your device GPS or open Google Maps'}
@@ -261,14 +261,14 @@ export default function AddressFormPage() {
           <button
             type="button"
             onClick={() => navigate('/addresses')}
-            className="flex-1 bg-gray-300 text-gray-700 py-3 rounded font-bold hover:bg-gray-400"
+            className="flex-1 bg-gray-600 text-gray-200 py-3 rounded font-bold hover:bg-gray-500"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 bg-brand-600 text-white py-3 rounded font-bold hover:bg-brand-700 disabled:bg-gray-300"
+            className="flex-1 bg-brand-600 text-white py-3 rounded font-bold hover:bg-brand-700 disabled:bg-gray-600"
           >
             {mutation.isPending ? 'Saving...' : isEdit ? 'Update Address' : 'Add Address'}
           </button>

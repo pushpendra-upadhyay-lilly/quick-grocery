@@ -30,7 +30,7 @@ export default function AccountPage() {
                 <p className="text-sm font-semibold text-brand-700">Identifier</p>
                 <p className="text-xs text-brand-600 mt-1">{user?.identifier}</p>
               </div>
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-900 text-green-300">
                 ✓ Verified
               </span>
             </div>
@@ -144,7 +144,7 @@ export default function AccountPage() {
         <button
           onClick={handleLogout}
           disabled={logout.isPending}
-          className="w-full bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-red-600 disabled:bg-red-300 transition"
+          className="w-full bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-red-600 disabled:bg-red-800 transition"
         >
           {logout.isPending ? 'Logging out...' : '🚪 Logout'}
         </button>

@@ -1,31 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import type { Category } from '../interfaces/products';
 import apiClient from '../lib/apiClient';
 import { useAuthStore } from '../stores/authStore';
-
-export interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  imageUrl: string;
-  sortOrder: number;
-  parentId?: string | null;
-}
-
-export interface Product {
-  _id: string;
-  name: string;
-  slug: string;
-  price: number;
-  comparePrice?: number;
-  imageUrl: string;
-  description: string;
-  categoryId: string;
-  tags: string[];
-  inStock: boolean;
-  stockQty: number;
-  unit: string;
-  brand: string;
-}
 
 export function useProducts(
   page = 1,

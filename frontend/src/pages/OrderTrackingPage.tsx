@@ -15,9 +15,9 @@ export default function OrderTrackingPage() {
   const { id } = useParams<{ id: string }>();
   const { data: order, isLoading } = useOrder(id || '');
   const { statusEvents } = useOrderTracking(id, order?.completed ? false : undefined);
-  
-    // Set navbar heading 
-    useNavbarHeading('Order Details');
+
+  // Set navbar heading 
+  useNavbarHeading('Order Details', order ? `Order #${order.id.slice(-8)}` : null);
 
   if (isLoading) return <div className="text-brand-600">Loading order...</div>;
   if (!order) return <div className="text-brand-600">Order not found</div>;

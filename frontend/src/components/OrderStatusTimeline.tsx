@@ -25,10 +25,10 @@ export default function OrderStatusTimeline({
 }: OrderStatusTimelineProps) {
   // Completed order - show single final status
   if (isCompleted) {
-    const bgColor = currentStatus === 'delivered' ? 'bg-green-50' : 'bg-red-50';
-    const borderColor = currentStatus === 'delivered' ? 'border-green-200' : 'border-red-200';
-    const textColor = currentStatus === 'delivered' ? 'text-green-800' : 'text-red-800';
-    const labelColor = currentStatus === 'delivered' ? 'text-green-600' : 'text-red-600';
+    const bgColor = currentStatus === 'delivered' ? 'bg-green-950' : 'bg-red-950';
+    const borderColor = currentStatus === 'delivered' ? 'border-green-800' : 'border-red-800';
+    const textColor = currentStatus === 'delivered' ? 'text-green-300' : 'text-red-300';
+    const labelColor = currentStatus === 'delivered' ? 'text-green-400' : 'text-red-400';
     const iconBg = currentStatus === 'delivered' ? 'bg-green-600' : 'bg-red-600';
     const latestEvent = allEvents[allEvents.length - 1];
  
@@ -61,7 +61,7 @@ export default function OrderStatusTimeline({
   const isFinalStatus = finalStatuses.includes(currentStatus);
 
   return (
-    <div className="mb-1 border-2 border-brand-200 rounded-lg p-4 bg-brand-50">
+    <div className="mb-4 border-2 border-brand-200 rounded-lg p-4 bg-brand-50">
       <h1 className="text-lg font-bold mb-3 text-brand-700">Tracking Details</h1>
       <div className="relative">
         {/* Timeline background */}
@@ -88,7 +88,7 @@ export default function OrderStatusTimeline({
                   >
                     {ORDER_STATUS_ICONS[status]}
                   </div>
-                  {idx < finalStatuses.length - 1 && (
+                  {idx < currentStatusIndex + 1 && (
                     <div
                       className={`w-1.5 h-12 mt-2 transition ${
                         isCompleted ? 'bg-green-600' : 'bg-brand-300'
@@ -100,7 +100,7 @@ export default function OrderStatusTimeline({
                 {/* Status details */}
                 <div className="pt-1 pb-6">
                   <p
-                    className={`font-bold text-base mb-1 ${
+                    className={`font-bold text-white mb-1 ${
                       isActive ? 'text-brand-800' : 'text-brand-700'
                     }`}
                   >
@@ -108,11 +108,11 @@ export default function OrderStatusTimeline({
                   </p>
                   {event && (
                     <>
-                      <p className="text-sm text-brand-600 mb-1">
+                      <p className="text-sm text-white mb-1">
                         {new Date(event.timestamp).toLocaleString()}
                       </p>
                       {event.note && (
-                        <p className="text-sm text-brand-500 italic">{event.note}</p>
+                        <p className="text-sm text-brand-800 italic">{event.note}</p>
                       )}
                     </>
                   )}

@@ -41,7 +41,7 @@ export default function SearchBar({ categories = [] }: SearchBarProps) {
     <div className="mb-8">
       <div
         onClick={() => navigate('/search')}
-        className="flex items-center gap-3 w-full max-w-2xl bg-white border-2 border-brand-300 rounded-lg px-4 py-2 hover:border-brand-600 transition cursor-pointer hover:shadow-md overflow-hidden"
+        className="flex items-center gap-3 w-full max-w-2xl bg-gray-800 border-2 border-brand-300 rounded-lg px-4 py-2 hover:border-brand-600 transition cursor-pointer hover:shadow-md overflow-hidden"
       >
         <span className="text-2xl text-brand-600 flex-shrink-0">🔍</span>
         <div className="flex-1 h-6 relative overflow-hidden">

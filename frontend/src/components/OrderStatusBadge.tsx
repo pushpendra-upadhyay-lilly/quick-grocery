@@ -95,7 +95,7 @@ export default function OrderStatusBadge({ orders = [], sticky = true }: OrderSt
         <div className="text-2xl flex-shrink-0">{ORDER_STATUS_ICONS[currentStatus]}</div>
         <div className="flex-1">
           <p className={`font-bold ${colors.text} text-sm`}>{ORDER_STATUS_LABELS[currentStatus].done}</p>
-          <p className="text-xs text-gray-600 mt-1">Order #{currentOrder.id.slice(-8)}</p>
+          <p className="text-xs text-gray-400 mt-1">Order #{currentOrder.id.slice(-8)}</p>
         </div>
         <button
           className={`w-8 h-8 p-1 ${colors.text} font-medium text-xs border border-current rounded-full hover:opacity-80 transition`}

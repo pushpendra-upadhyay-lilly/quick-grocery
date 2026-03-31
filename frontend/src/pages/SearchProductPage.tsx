@@ -6,6 +6,7 @@ import { useMyFrequentProducts, useProducts, useTopProducts } from '../hooks/use
 import { useProductSuggestions } from '../hooks/useProductSuggestions';
 import { useAuthStore } from '../stores/authStore';
 import { useSearchHistoryStore } from '../stores/searchHistoryStore';
+import type { SuggestionProduct } from '../interfaces/products';
 
 export default function SearchProductPage() {
   const [inputValue, setInputValue] = useState('');
@@ -67,8 +68,8 @@ export default function SearchProductPage() {
   return (
     <div>
       {/* Sticky Search Bar */}
-      <div className="sticky top-0 z-10 bg-white pb-2 border-b-2 border-brand-200">
-        <div className="flex items-center gap-3 w-full max-w-2xl bg-white border-2 border-brand-300 rounded-lg px-4 py-2 hover:border-brand-600 transition cursor-pointer hover:shadow-md">
+      <div className="sticky top-0 z-10 bg-gray-900 pb-2 border-b-2 border-brand-200">
+        <div className="flex items-center gap-3 w-full max-w-2xl bg-gray-800 border-2 border-brand-300 rounded-lg px-4 py-2 hover:border-brand-600 transition cursor-pointer hover:shadow-md">
           <span className="text-2xl text-brand-600 flex-shrink-0">🔍</span>
           <input
             type="text"
@@ -145,24 +146,23 @@ export default function SearchProductPage() {
         {isSearching && (
           <>
             {/* Suggestions Section */}
-            {!suggestionsLoading && suggestions.length > 0 && (
+            {!suggestionsLoading && suggestions?.length &&  suggestions?.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-sm font-bold text-brand-600 mb-3 uppercase">Suggestions</h3>
                 <div className="space-y-2">
-                  {suggestions.map((suggestion: any) => (
+                  {suggestions.map((suggestion: SuggestionProduct) => (
                     <button
                       key={suggestion._id}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-brand-50 rounded-lg transition"
+                      className="w-full flex items-center gap-1 p-2 hover:bg-brand-50 rounded-lg transition mb-0"
                     >
                       <img
                         src={suggestion.imageUrl}
                         alt={suggestion.name}
-                        className="w-10 h-10 object-cover rounded"
+                        className="w-4 h-4 object-cover rounded-sm"
                       />
                       <div className="text-left flex-1">
-                        <p className="text-sm font-medium text-brand-700">{suggestion.name}</p>
-                        <p className="text-xs text-brand-600">Rs. {suggestion.price.toFixed(2)}</p>
+                        <p className="text-sm font-small text-brand-700">{suggestion.name}</p>
                       </div>
                     </button>
                   ))}

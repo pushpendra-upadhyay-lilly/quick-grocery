@@ -4,6 +4,7 @@ interface ItemQuantityProps {
   isLoading?: boolean;
   minQuantity?: number;
   maxQuantity?: number;
+  isBlinking?: boolean;
 }
 
 export default function ItemQuantity({
@@ -12,6 +13,7 @@ export default function ItemQuantity({
   isLoading = false,
   minQuantity = 1,
   maxQuantity = 8,
+  isBlinking = false,
 }: ItemQuantityProps) {
   const handleDecrement = () => {
     if (quantity > minQuantity) {
@@ -26,22 +28,30 @@ export default function ItemQuantity({
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={handleDecrement}
-        disabled={isLoading || quantity <= minQuantity}
-        className="px-2 py-1 border-2 border-brand-300 rounded hover:bg-brand-100 text-brand-700 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        −
-      </button>
-      <span className="w-auto text-center font-bold text-brand-700">{quantity}</span>
-      <button
-        onClick={handleIncrement}
-        disabled={isLoading || quantity >= maxQuantity}
-        className="px-2 py-1 border-2 border-brand-300 rounded hover:bg-brand-100 text-brand-700 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        +
-      </button>
+    <div
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      className={`rounded-md bg-brand-500 p-1 shadow-md ${isBlinking ? 'animate-blink' : ''}`}
+    >
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleDecrement}
+          disabled={isLoading || quantity <= minQuantity}
+          className="p-1 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          −
+        </button>
+        <span className="w-auto text-center font-bold text-white">{quantity}</span>
+        <button
+          onClick={handleIncrement}
+          disabled={isLoading || quantity >= maxQuantity}
+          className="p-1 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          +
+        </button>
+      </div>
     </div>
   );
 }

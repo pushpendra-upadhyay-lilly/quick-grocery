@@ -1,8 +1,9 @@
-import type { Order } from '../hooks/useOrders';
+import type { Order } from "../interfaces/orders";
+
 
 export default function OrderDetails({ order }: { order: Order }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
       {/* Items */}
       <div className="bg-brand-50 border-2 border-brand-200 rounded-lg p-6">
         <h2 className="font-bold mb-4 text-brand-700 text-lg">Items</h2>

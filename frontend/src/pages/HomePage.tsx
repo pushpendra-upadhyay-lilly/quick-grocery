@@ -79,7 +79,7 @@ export default function HomePage() {
                 to={`/categories/${cat._id}`}
                 className="bg-brand-50 border-2 border-brand-200 lg overflow-hidden hover:shadow-lg hover:border-brand-400 transition"
               >
-                <img src={cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover bg-gray-200" />
+                <img src={cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover bg-gray-700" />
                 <div className="p-4 bg-brand-50">
                   <h3 className="font-bold text-center text-brand-700">{cat.name}</h3>
                 </div>

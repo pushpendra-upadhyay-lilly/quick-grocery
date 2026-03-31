@@ -1,34 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import type { Order } from '../interfaces/orders';
 import apiClient from '../lib/apiClient';
 import { useAuthStore } from '../stores/authStore';
-import type { OrderStatus } from '../constants/orderStatus';
-
-export interface Order {
-  id: string;
-  status: OrderStatus;
-  totalAmount: number;
-  addressSnapshot: {
-    line1: string;
-    line2?: string;
-    city: string;
-    postcode: string;
-  };
-  items: Array<{
-    id: string;
-    productId: string;
-    productName: string;
-    quantity: number;
-    unitPrice: number;
-  }>;
-  statusHistory: Array<{
-    id: string;
-    status: OrderStatus;
-    timestamp: string;
-    note?: string;
-  }>;
-  createdAt: string;
-  completed: boolean;
-}
 
 export function useOrders() {
   const token = useAuthStore((s) => s.accessToken);

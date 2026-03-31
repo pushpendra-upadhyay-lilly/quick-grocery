@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react';
+import type { StatusEvent } from '../interfaces/orderTracking';
 import { useAuthStore } from '../stores/authStore';
-import type { OrderStatus } from '../constants/orderStatus';
-
-export interface StatusEvent {
-  orderId: string;
-  status: OrderStatus;
-  timestamp: string;
-  note?: string;
-}
 
 export function useOrderTracking(orderId: string | undefined, shouldConnect: boolean = true) {
   const [statusEvents, setStatusEvents] = useState<StatusEvent[]>([]);

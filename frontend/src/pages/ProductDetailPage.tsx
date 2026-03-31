@@ -33,7 +33,7 @@ export default function ProductDetailPage() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
-        <img src={product.imageUrl} alt={product.name} className="w-full rounded-lg bg-gray-200 h-96 object-cover" />
+        <img src={product.imageUrl} alt={product.name} className="w-full rounded-lg bg-gray-700 h-96 object-cover" />
       </div>
       <div>
         <h1 className="text-3xl font-bold mb-2 text-brand-800">{product.name}</h1>
@@ -69,7 +69,7 @@ export default function ProductDetailPage() {
           <button
             onClick={handleAddToCart}
             disabled={!product.inStock || addToCart.isPending}
-            className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-brand-700 disabled:bg-gray-300"
+            className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-brand-700 disabled:bg-gray-600"
           >
             {addToCart.isPending ? 'Adding...' : product.inStock ? 'Add to Cart' : 'Out of Stock'}
           </button>

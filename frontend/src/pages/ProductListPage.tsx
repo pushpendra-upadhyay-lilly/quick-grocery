@@ -5,13 +5,14 @@ import { useProducts } from '../hooks/useProducts';
 import toast from 'react-hot-toast';
 import CategorySidebar from '../components/CategorySidebar';
 import ProductCard from '../components/ProductCard';
+import type { Product } from '../interfaces/products';
 
 function Products({ subCategoryId }: { subCategoryId?: string }) {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useProducts(page, 20, subCategoryId);
   const addToCart = useAddToCart();
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: Product) => {
     addToCart.mutate({
       productId: product.slug,
       name: product.name,
@@ -83,7 +84,7 @@ export default function ProductListPage() {
   // useNavbarHeading(categoryName);
 
   return (
-    <div className="flex gap-6 min-h-[calc(100vh-48px)]">
+    <div className="flex gap-3 min-h-[calc(100vh-48px)]">
       <CategorySidebar
         activeSlug={subCategoryId}
         onCategorySelect={setSubCategoryId}
