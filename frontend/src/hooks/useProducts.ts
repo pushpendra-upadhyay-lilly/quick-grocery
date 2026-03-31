@@ -8,6 +8,7 @@ export interface Category {
   slug: string;
   imageUrl: string;
   sortOrder: number;
+  parentId?: string | null;
 }
 
 export interface Product {
@@ -67,8 +68,22 @@ export function useCategories() {
     queryKey: ['categories'],
     queryFn: async () => {
       const response = await apiClient.get('/products/categories');
-      return response.data;
+      return response.data as Category[];
     },
+  });
+}
+
+export function useSubcategories(parentSlug: string | undefined) {
+  return useQuery({
+    queryKey: ['categories', 'sub', parentSlug],
+    queryFn: async () => {
+      const response = await apiClient.get(
+        `/products/categories/${parentSlug}/subcategories`,
+      );
+      return response.data as Category[];
+    },
+    enabled: !!parentSlug,
+    staleTime: 60_000,
   });
 }
 

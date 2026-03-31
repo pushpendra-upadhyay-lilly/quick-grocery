@@ -25,7 +25,14 @@ export class ProductsService {
     const skip = (page - 1) * limit;
 
     const filter: any = {};
-    if (categoryId) filter.categoryId = categoryId;
+    if (categoryId) {
+      // Support comma-separated list of IDs (used when querying parent + children)
+      const ids = categoryId
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
+      filter.categoryId = ids.length === 1 ? ids[0] : { $in: ids };
+    }
     if (inStock !== undefined) {
       // Convert string "true"/"false" to boolean
       filter.inStock = inStock;
@@ -138,14 +145,48 @@ export class ProductsService {
       throw new Error('Category not found');
     }
 
+    // Collect this category + all direct children so products of subcategories
+    // are included when browsing a parent category.
+    const categoryId = category._id.toString();
+    const children = await this.categoryModel
+      .find({ parentId: categoryId })
+      .select('_id')
+      .lean();
+    const ids = [categoryId, ...children.map((c) => c._id.toString())];
+
     return this.findAll({
       ...query,
-      categoryId: category._id.toString(),
+      categoryId: ids.join(','),
     });
   }
 
   async findCategories() {
     return this.categoryModel.find().sort({ sortOrder: 1 }).lean();
+  }
+
+  async findTopLevelCategories() {
+    return this.categoryModel
+      .find({ $or: [{ parentId: null }, { parentId: { $exists: false } }] })
+      .sort({ sortOrder: 1 })
+      .lean();
+  }
+
+  async findSubcategories(parentId: string) {
+    return await this.categoryModel
+      .find({ parentId })
+      .sort({ sortOrder: 1 })
+      .lean();
+  }
+
+  async findSubcategoriesByParentId(parentId: string) {
+    const parent = await this.categoryModel.findOne({ _id: parentId }).lean();
+
+    if (!parent) return [];
+
+    return this.categoryModel
+      .find({ parentId: parent._id.toString() })
+      .sort({ sortOrder: 1 })
+      .lean();
   }
 
   async findCategoryBySlug(slug: string) {

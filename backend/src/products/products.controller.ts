@@ -26,7 +26,12 @@ export class ProductsController {
 
   @Get('categories')
   async getCategories() {
-    return this.productsService.findCategories();
+    return this.productsService.findTopLevelCategories();
+  }
+
+  @Get('categories/:id/subcategories')
+  async getSubcategories(@Param('id') id: string) {
+    return this.productsService.findSubcategoriesByParentId(id);
   }
 
   @Get('categories/:slug/products')

@@ -76,7 +76,7 @@ export default function HomePage() {
             {categories?.map((cat: any) => (
               <Link
                 key={cat._id}
-                to={`/categories/${cat.slug}`}
+                to={`/categories/${cat._id}`}
                 className="bg-brand-50 border-2 border-brand-200 lg overflow-hidden hover:shadow-lg hover:border-brand-400 transition"
               >
                 <img src={cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover bg-gray-200" />
