@@ -2,7 +2,6 @@ import toast from 'react-hot-toast';
 import { getApiErrorMessage, toNumber, toOptionalNumber } from '../lib/parsers';
 import {
   DP_OUT_FOR_DELIVERY_DONE_STATUSES,
-  DP_PICKUP_DONE_STATUSES,
   DP_REACHED_STATUSES,
   ORDER_STATUS_ICONS,
   ORDER_STATUS_LABELS,
@@ -38,7 +37,6 @@ export default function ActiveDelivery({ order, onDelivered }: ActiveDeliveryPro
   const deliveryLatitude = toOptionalNumber(order.deliveryLatitude);
   const deliveryLongitude = toOptionalNumber(order.deliveryLongitude);
   const isUpdating = updateOrderStatus.isPending || markDeliveredMutation.isPending;
-  const hasPickupStarted = DP_PICKUP_DONE_STATUSES.includes(normalizedStatus);
   const hasDeliveryStarted = DP_OUT_FOR_DELIVERY_DONE_STATUSES.includes(normalizedStatus);
   const hasReachedCustomer = DP_REACHED_STATUSES.includes(normalizedStatus);
   const canGetDirections =
@@ -56,10 +54,6 @@ export default function ActiveDelivery({ order, onDelivered }: ActiveDeliveryPro
     going_for_pickup: {
       status: 'out_for_delivery',
       label: 'Start Delivery',
-    },
-    out_for_delivery: {
-      status: 'reached',
-      label: 'Mark Reached',
     },
   };
 
@@ -153,44 +147,6 @@ export default function ActiveDelivery({ order, onDelivered }: ActiveDeliveryPro
             </p>
           </div>
         )}
-      </div>
-
-      {/* Status Progress */}
-      <div className="mb-6 space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm">✓</div>
-          <span className="text-sm font-semibold">{ORDER_STATUS_LABELS.accepted}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className={`w-6 h-6 rounded-full ${
-            hasPickupStarted
-              ? 'bg-green-500 text-white'
-              : 'bg-gray-300'
-          } flex items-center justify-center text-sm`}>
-            {hasPickupStarted ? '✓' : '○'}
-          </div>
-          <span className="text-sm font-semibold">{ORDER_STATUS_LABELS.going_for_pickup}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className={`w-6 h-6 rounded-full ${
-            hasDeliveryStarted
-              ? 'bg-green-500 text-white'
-              : 'bg-gray-300'
-          } flex items-center justify-center text-sm`}>
-            {hasDeliveryStarted ? '✓' : '○'}
-          </div>
-          <span className="text-sm font-semibold">{ORDER_STATUS_LABELS.out_for_delivery}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className={`w-6 h-6 rounded-full ${
-            hasReachedCustomer
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-300'
-          } flex items-center justify-center text-sm`}>
-            {hasReachedCustomer ? '→' : '○'}
-          </div>
-          <span className="text-sm font-semibold">{ORDER_STATUS_LABELS.reached}</span>
-        </div>
       </div>
 
       {/* Action Buttons */}

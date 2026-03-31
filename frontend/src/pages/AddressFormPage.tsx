@@ -92,8 +92,8 @@ export default function AddressFormPage() {
         (position) => {
           setFormData({
             ...formData,
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+            latitude: Number(position.coords.latitude),
+            longitude: Number(position.coords.longitude),
           });
           toast.success('Location pinned from your device');
         },
@@ -219,13 +219,13 @@ export default function AddressFormPage() {
             <div>
               <p className="text-gray-400 font-semibold">Latitude</p>
               <p className="text-blue-400 font-mono">
-                {formData.latitude ? formData.latitude.toFixed(6) : 'Not set'}
+                {formData.latitude ? Number(formData.latitude).toFixed(6) : 'Not set'}
               </p>
             </div>
             <div>
               <p className="text-gray-400 font-semibold">Longitude</p>
               <p className="text-blue-400 font-mono">
-                {formData.longitude ? formData.longitude.toFixed(6) : 'Not set'}
+                {formData.longitude ? Number(formData.longitude).toFixed(6) : 'Not set'}
               </p>
             </div>
           </div>

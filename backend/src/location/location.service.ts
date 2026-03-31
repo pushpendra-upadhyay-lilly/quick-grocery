@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Location } from './entities/location.entity';
 
 const LOCATION_HEARTBEAT_TIMEOUT_MS = 30_000;
@@ -17,6 +18,7 @@ export class LocationService {
   constructor(
     @InjectRepository(Location)
     private locationRepo: Repository<Location>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -48,7 +50,15 @@ export class LocationService {
       location.updatedAt = new Date();
     }
 
-    return this.locationRepo.save(location);
+    const saved = await this.locationRepo.save(location);
+
+    this.eventEmitter.emit('dp.location_updated', {
+      userId,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    });
+
+    return saved;
   }
 
   /**

@@ -19,6 +19,7 @@ import { CartService } from '../cart/cart.service';
 import { ProductsService } from '../products/products.service';
 import { WalletService } from '../wallet/wallet.service';
 import { User } from '../users/entities/user.entity';
+import { OnEvent } from '@nestjs/event-emitter';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
@@ -37,7 +38,7 @@ export class OrdersService {
     private productsService: ProductsService,
     private walletService: WalletService,
     private eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   /**
    * Calculate distance between two coordinates (km)
@@ -54,9 +55,9 @@ export class OrdersService {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
@@ -98,6 +99,45 @@ export class OrdersService {
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 3)
       .map((item) => item.user);
+  }
+
+  private static readonly REACHED_RADIUS_KM = 0.05; // 50 meters
+
+  /**
+   * Auto-update order to REACHED when DP is within 50m of delivery location
+   */
+  @OnEvent('dp.location_updated')
+  async handleDpLocationUpdated(payload: {
+    userId: string;
+    latitude: number;
+    longitude: number;
+  }) {
+    const activeOrder = await this.orderRepo.findOne({
+      where: {
+        deliveryPartnerId: payload.userId,
+        status: OrderStatus.OUT_FOR_DELIVERY,
+        completed: false,
+      },
+    });
+
+    if (!activeOrder) return;
+
+    const distance = this.calculateDistance(
+      payload.latitude,
+      payload.longitude,
+      Number(activeOrder.deliveryLatitude),
+      Number(activeOrder.deliveryLongitude),
+    );
+
+    console.log('Distance to delivery location:', distance, 'km');
+
+    if (distance <= OrdersService.REACHED_RADIUS_KM) {
+      await this.updateOrderStatus(
+        activeOrder.id,
+        payload.userId,
+        OrderStatus.REACHED,
+      );
+    }
   }
 
   async createOrder(userId: string, dto: CreateOrderDto) {

@@ -73,5 +73,6 @@ export function useOrders() {
     },
     enabled: !!token,
     staleTime: 0,
+    refetchInterval: 15_000,
   });
 }

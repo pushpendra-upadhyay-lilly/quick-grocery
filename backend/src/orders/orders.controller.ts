@@ -55,7 +55,7 @@ export class OrdersController {
   @Get('assigned/list')
   @UseGuards(JwtAuthGuard)
   async getAssignedOrders(@CurrentUser() user: any) {
-    console.log(user);
+    // console.log(user);
     return this.ordersService.getAssignedOrders(user.id);
   }
 

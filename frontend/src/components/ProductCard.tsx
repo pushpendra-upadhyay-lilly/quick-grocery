@@ -47,13 +47,13 @@ export default function ProductCard({ product, onAddToCart, isAddingToCart = fal
         {!small && (
           <div className='absolute bottom-0 right-2 translate-y-1/4'>
             {cartItem ? (
-                <ItemQuantity
-                  quantity={cartItem.quantity}
-                  onQuantityChange={handleQuantityChange}
-                  isLoading={updateQuantity.isPending}
-                  minQuantity={0}
-                  isBlinking={isBlinking}
-                />
+              <ItemQuantity
+                quantity={cartItem.quantity}
+                onQuantityChange={handleQuantityChange}
+                isLoading={updateQuantity.isPending}
+                minQuantity={0}
+                isBlinking={isBlinking}
+              />
             ) : (
               // Show Add button if item is not in cart
               <button
@@ -67,17 +67,17 @@ export default function ProductCard({ product, onAddToCart, isAddingToCart = fal
           </div>
         )}
       </div>
-      <div className={`${small ? 'p-2' : 'pt-4 pb-3 px-0'}`}>
-        <span className="text-[10px] text-brand-600 mt-1 border border-gray-600 inline-block p-1 rounded">{product.unit}</span>
+      <div className={`${small ? 'px-0 py-2' : 'pt-4 pb-3 px-0'}`}>
+        {!small && (<span className="text-[10px] text-brand-600 mt-1 border border-gray-600 inline-block p-1 rounded">{product.unit}</span>)}
         <p className={`text-gray-100 wrap-normal ${small ? 'text-sm' : 'text-md'}`}>
-          {product.brand}{" "}{product.name}
+          {!small ? product.brand: ''}{" "}{product.name}
         </p>
         {!small && (
           <div className='mt-1'>
-              <p className="font-bold text-sm text-gray-100">Rs. {product.price.toFixed(2)}</p>
-              {product.comparePrice && (
-                <p className="line-through text-gray-400 text-xs">Rs. {product.comparePrice.toFixed(2)}</p>
-              )}
+            <p className="font-bold text-sm text-gray-100">Rs. {product.price.toFixed(2)}</p>
+            {product.comparePrice && (
+              <p className="line-through text-gray-400 text-xs">Rs. {product.comparePrice.toFixed(2)}</p>
+            )}
           </div>
         )}
       </div>

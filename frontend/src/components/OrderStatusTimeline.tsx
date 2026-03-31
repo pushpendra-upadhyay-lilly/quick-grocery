@@ -66,7 +66,7 @@ export default function OrderStatusTimeline({
       <div className="relative">
         {/* Timeline background */}
         <div className="space-y-1">
-          {finalStatuses.slice(0, currentStatusIndex + 2).map((status, idx) => {
+          {finalStatuses.slice(0, currentStatusIndex + 2).map((status, idx, array) => {
             const isCompleted = idx <= currentStatusIndex;
             const isActive = idx === currentStatusIndex;
             const event = allEvents.find((e) => e.status === status);
@@ -88,7 +88,7 @@ export default function OrderStatusTimeline({
                   >
                     {ORDER_STATUS_ICONS[status]}
                   </div>
-                  {idx < currentStatusIndex + 1 && (
+                  {idx < array.length - 1 && (
                     <div
                       className={`w-1.5 h-12 mt-2 transition ${
                         isCompleted ? 'bg-green-600' : 'bg-brand-300'

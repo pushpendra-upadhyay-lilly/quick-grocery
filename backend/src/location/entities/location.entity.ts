@@ -30,10 +30,10 @@ export class Location {
   @Column({ type: 'decimal', precision: 10, scale: 6 })
   longitude: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'float', nullable: true })
   accuracy: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'float', nullable: true })
   speed: number;
 
   @Column({ default: true })
