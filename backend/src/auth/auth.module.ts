@@ -12,6 +12,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtSseGuard } from './guards/jwt-sse.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
@@ -21,8 +22,8 @@ import { JwtSseGuard } from './guards/jwt-sse.guard';
     TypeOrmModule.forFeature([User, RefreshToken, Location]),
     OtpModule,
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, JwtSseGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, JwtSseGuard, RolesGuard],
   controllers: [AuthController],
-  exports: [AuthService, JwtAuthGuard, JwtSseGuard, JwtModule],
+  exports: [AuthService, JwtAuthGuard, JwtSseGuard, RolesGuard, JwtModule],
 })
 export class AuthModule {}

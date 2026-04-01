@@ -1,9 +1,18 @@
-import { Injectable, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemas/product.schema';
 import { Category, CategoryDocument } from './schemas/category.schema';
 import { QueryProductsDto } from './dto/query-products.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order, OrderItem } from '../orders/entities/order.entity';
@@ -37,6 +46,8 @@ export class ProductsService {
       // Convert string "true"/"false" to boolean
       filter.inStock = inStock;
     }
+
+    console.log(filter);
 
     const sortObj: any = {};
     let pipeline: any[] = [];
@@ -251,5 +262,106 @@ export class ProductsService {
       .lean();
 
     return products;
+  }
+
+  // ── Admin: Category CRUD ──────────────────────────────────────────────────
+
+  async findAllCategoriesGrouped() {
+    const all = await this.categoryModel.find().sort({ sortOrder: 1 }).lean();
+    const parents = all.filter((c) => !c.parentId);
+    return parents.map((parent) => ({
+      ...parent,
+      children: all.filter((c) => c.parentId === parent._id.toString()),
+    }));
+  }
+
+  async createCategory(dto: CreateCategoryDto) {
+    const slug = dto.slug || this.slugify(dto.name);
+    const category = new this.categoryModel({ ...dto, slug });
+    return category.save();
+  }
+
+  async updateCategory(id: string, dto: UpdateCategoryDto) {
+    const updated = await this.categoryModel
+      .findByIdAndUpdate(id, dto, { new: true })
+      .lean();
+    if (!updated) throw new NotFoundException('Category not found');
+    return updated;
+  }
+
+  async deleteCategory(id: string) {
+    const productCount = await this.productModel.countDocuments({
+      categoryId: id,
+    });
+    if (productCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete: ${productCount} product(s) reference this category`,
+      );
+    }
+    const subCount = await this.categoryModel.countDocuments({ parentId: id });
+    if (subCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete: ${subCount} subcategory(ies) reference this category`,
+      );
+    }
+    const deleted = await this.categoryModel.findByIdAndDelete(id).lean();
+    if (!deleted) throw new NotFoundException('Category not found');
+    return { deleted: true };
+  }
+
+  // ── Admin: Product CRUD ───────────────────────────────────────────────────
+
+  async findAllAdmin(query: QueryProductsDto) {
+    // Same as findAll but does NOT filter by inStock by default
+    return this.findAll(query);
+  }
+
+  async findProductById(id: string) {
+    const product = await this.productModel.findById(id).lean();
+    if (!product) throw new NotFoundException('Product not found');
+    return product;
+  }
+
+  async createProduct(dto: CreateProductDto) {
+    const slug = dto.slug || this.slugify(dto.name);
+    const product = new this.productModel({ ...dto, slug });
+    return product.save();
+  }
+
+  async updateProduct(id: string, dto: UpdateProductDto) {
+    const updated = await this.productModel
+      .findByIdAndUpdate(id, dto, { new: true })
+      .lean();
+    if (!updated) throw new NotFoundException('Product not found');
+    return updated;
+  }
+
+  async deleteProduct(id: string) {
+    const deleted = await this.productModel.findByIdAndDelete(id).lean();
+    if (!deleted) throw new NotFoundException('Product not found');
+    return { deleted: true };
+  }
+
+  async getDashboardStats() {
+    const [totalProducts, totalCategories, inStockCount] = await Promise.all([
+      this.productModel.countDocuments(),
+      this.categoryModel.countDocuments(),
+      this.productModel.countDocuments({ inStock: true }),
+    ]);
+    return {
+      totalProducts,
+      totalCategories,
+      inStockCount,
+      outOfStockCount: totalProducts - inStockCount,
+    };
+  }
+
+  private slugify(text: string): string {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
   }
 }

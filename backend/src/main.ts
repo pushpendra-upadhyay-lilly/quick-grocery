@@ -16,7 +16,11 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      process.env.DP_FRONTEND_URL || 'http://localhost:5174',
+      process.env.ADMIN_FRONTEND_URL || 'http://localhost:5175',
+    ],
     credentials: true,
   });
 
@@ -25,4 +29,7 @@ async function bootstrap() {
     `🚀 Server running on http://localhost:${process.env.PORT || 3000}/api`,
   );
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Error starting server:', err);
+  process.exit(1);
+});

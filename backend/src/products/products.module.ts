@@ -7,10 +7,12 @@ import { Category, CategorySchema } from './schemas/category.schema';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
 import { Order, OrderItem } from '../orders/entities/order.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     CacheModule.register(),
+    AuthModule,
     MongooseModule.forFeature([
       { name: Product.name, schema: ProductSchema },
       { name: Category.name, schema: CategorySchema },
