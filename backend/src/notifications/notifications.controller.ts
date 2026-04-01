@@ -10,6 +10,8 @@ import { Observable } from 'rxjs';
 import { NotificationsService } from './notifications.service';
 import { OrdersService } from '../orders/orders.service';
 import { JwtSseGuard } from '../auth/guards/jwt-sse.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('orders')
@@ -21,7 +23,8 @@ export class NotificationsController {
 
   @Get(':id/events')
   @Sse()
-  @UseGuards(JwtSseGuard)
+  @UseGuards(JwtSseGuard, RolesGuard)
+  @Roles('user', 'delivery_partner')
   async orderEvents(
     @Param('id') orderId: string,
     @CurrentUser() user: any,
@@ -36,7 +39,6 @@ export class NotificationsController {
 
     const stream = this.notificationsService.getStream(orderId);
 
-    // Send initial status events
     for (const event of order.statusHistory) {
       stream.next({
         data: JSON.stringify({

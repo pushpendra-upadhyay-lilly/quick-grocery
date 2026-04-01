@@ -38,6 +38,10 @@ export class JwtSseGuard implements CanActivate {
       request.user = payload;
       return true;
     } catch (err) {
+      console.error(
+        '[JwtSseGuard] Token verification failed:',
+        (err as Error).message,
+      );
       throw new UnauthorizedException('Invalid token');
     }
   }

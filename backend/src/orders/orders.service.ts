@@ -233,7 +233,7 @@ export class OrdersService {
         pickupLongitude: 0,
         deliveryLatitude: address.latitude,
         deliveryLongitude: address.longitude,
-        expiresAt: new Date(Date.now() + 2 * 60 * 1000), // 2 minutes
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
       });
     }
 
@@ -319,7 +319,7 @@ export class OrdersService {
       [OrderStatus.ACCEPTED]: [OrderStatus.GOING_FOR_PICKUP],
       [OrderStatus.GOING_FOR_PICKUP]: [OrderStatus.OUT_FOR_DELIVERY],
       [OrderStatus.OUT_FOR_DELIVERY]: [OrderStatus.REACHED],
-      [OrderStatus.REACHED]: [OrderStatus.DELIVERED],
+      [OrderStatus.REACHED]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
     };
 
     if (
@@ -332,7 +332,7 @@ export class OrdersService {
     }
 
     order.status = status;
-    if (status === OrderStatus.DELIVERED) {
+    if (status === OrderStatus.DELIVERED || status === OrderStatus.CANCELLED) {
       order.completed = true;
     }
     await this.orderRepo.save(order);

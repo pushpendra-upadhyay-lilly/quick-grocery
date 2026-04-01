@@ -12,11 +12,14 @@ import {
 import { CartService } from './cart.service';
 import { ProductsService } from '../products/products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 
 @Controller('cart')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('user')
 export class CartController {
   constructor(
     private cartService: CartService,

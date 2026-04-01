@@ -10,30 +10,29 @@ import {
 import { OrderRequestService } from './order-requests.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtSseGuard } from '../auth/guards/jwt-sse.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { LocationService } from '../location/location.service';
 import { Observable, interval } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Controller('order-requests')
+@Roles('delivery_partner')
 export class OrderRequestController {
   constructor(
     private orderRequestService: OrderRequestService,
     private locationService: LocationService,
   ) {}
 
-  /**
-   * SSE endpoint for listening to order requests in real-time
-   */
   @Sse('listen')
-  @UseGuards(JwtSseGuard)
+  @UseGuards(JwtSseGuard, RolesGuard)
   listenToOrderRequests(@CurrentUser() user: any): Observable<MessageEvent> {
     const deliveryPartnerId = user.id;
 
     return new Observable((subscriber) => {
       void this.locationService.heartbeat(deliveryPartnerId);
 
-      // Send initial connection message
       subscriber.next({
         data: JSON.stringify({
           type: 'connected',
@@ -52,7 +51,6 @@ export class OrderRequestController {
         } as MessageEvent);
       });
 
-      // Poll for pending requests every 5 seconds
       const subscription = interval(5000)
         .pipe(
           map(async () => {
@@ -100,11 +98,8 @@ export class OrderRequestController {
     });
   }
 
-  /**
-   * Get pending order requests for delivery partner
-   */
   @Get('pending')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async getPendingRequests(@CurrentUser() user: any) {
     const requests = await this.orderRequestService.getPendingRequests(
       user.id,
@@ -125,11 +120,8 @@ export class OrderRequestController {
     };
   }
 
-  /**
-   * Accept an order request
-   */
   @Post(':id/accept')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async acceptOrderRequest(
     @Param('id') orderRequestId: string,
     @CurrentUser() user: any,
@@ -145,11 +137,8 @@ export class OrderRequestController {
     };
   }
 
-  /**
-   * Decline an order request
-   */
   @Post(':id/decline')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async declineOrderRequest(
     @Param('id') orderRequestId: string,
     @CurrentUser() user: any,

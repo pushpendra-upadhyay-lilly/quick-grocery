@@ -6,6 +6,7 @@ import { OrdersController } from './orders.controller';
 import { CartModule } from '../cart/cart.module';
 import { ProductsModule } from '../products/products.module';
 import { WalletModule } from '../wallet/wallet.module';
+import { AuthModule } from '../auth/auth.module';
 import { Address } from '../users/entities/address.entity';
 import { Location } from '../location/entities/location.entity';
 import { User } from '../users/entities/user.entity';
@@ -16,6 +17,7 @@ import { User } from '../users/entities/user.entity';
     CartModule,
     ProductsModule,
     WalletModule,
+    AuthModule,
   ],
   providers: [OrdersService],
   controllers: [OrdersController],

@@ -1,10 +1,21 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThanOrEqual, Not, Repository } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { OrderRequest, OrderRequestStatus } from './entities/order-request.entity';
-import { Order, OrderStatus, OrderStatusEvent } from '../orders/entities/order.entity';
+import {
+  Order,
+  OrderStatus,
+  OrderStatusEvent,
+} from '../orders/entities/order.entity';
 import { WalletService } from '../wallet/wallet.service';
+import {
+  OrderRequest,
+  OrderRequestStatus,
+} from './entities/order-request.entity';
 
 export interface CreateOrderRequestDto {
   orderId: string;
@@ -123,7 +134,9 @@ export class OrderRequestService {
       { status: OrderRequestStatus.EXPIRED },
     );
 
-    for (const orderId of new Set(expiredRequests.map((request) => request.orderId))) {
+    for (const orderId of new Set(
+      expiredRequests.map((request) => request.orderId),
+    )) {
       await this.cancelOrderIfUnassigned(orderId);
     }
   }
