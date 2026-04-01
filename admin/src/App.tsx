@@ -9,6 +9,7 @@ import ProductListPage from './pages/products/ProductListPage';
 import ProductFormPage from './pages/products/ProductFormPage';
 import CategoryListPage from './pages/categories/CategoryListPage';
 import CategoryFormPage from './pages/categories/CategoryFormPage';
+import OrderListPage from './pages/orders/OrderListPage';
 import { useMe } from './hooks/useAuth';
 import { useAuthStore } from './stores/authStore';
 
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="categories" element={<CategoryListPage />} />
           <Route path="categories/new" element={<CategoryFormPage />} />
           <Route path="categories/:id/edit" element={<CategoryFormPage />} />
+          <Route path="orders" element={<OrderListPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

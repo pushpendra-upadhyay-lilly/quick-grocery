@@ -280,6 +280,82 @@ export class OrdersService {
     });
   }
 
+  // ── Admin methods ──────────────────────────────────────────────────────────
+
+  async adminGetAllOrders(params: {
+    page: number;
+    limit: number;
+    status?: OrderStatus;
+  }) {
+    const { page, limit, status } = params;
+    const where: any = {};
+    if (status) where.status = status;
+
+    const [data, total] = await this.orderRepo.findAndCount({
+      where,
+      relations: ['items', 'user', 'deliveryPartner'],
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return { data, total, page, limit, pages: Math.ceil(total / limit) };
+  }
+
+  async adminGetOrderById(orderId: string) {
+    const order = await this.orderRepo.findOne({
+      where: { id: orderId },
+      relations: ['items', 'statusHistory', 'user', 'deliveryPartner'],
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  async adminCancelOrder(orderId: string) {
+    const order = await this.orderRepo.findOne({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.completed) throw new BadRequestException('Order already completed');
+
+    order.status = OrderStatus.CANCELLED;
+    order.completed = true;
+    await this.orderRepo.save(order);
+
+    await this.eventRepo.save({
+      orderId,
+      status: OrderStatus.CANCELLED,
+      note: 'Cancelled by admin',
+    });
+
+    this.eventEmitter.emit('order.status_updated', {
+      orderId,
+      status: OrderStatus.CANCELLED,
+      timestamp: new Date(),
+    });
+
+    return order;
+  }
+
+  async adminGetOrderStats() {
+    const statuses = Object.values(OrderStatus);
+    const counts = await Promise.all(
+      statuses.map((status) => this.orderRepo.count({ where: { status } })),
+    );
+
+    const byStatus = Object.fromEntries(
+      statuses.map((status, i) => [status, counts[i]]),
+    );
+
+    const totalOrders = counts.reduce((a, b) => a + b, 0);
+    const totalRevenue = await this.orderRepo
+      .createQueryBuilder('order')
+      .select('COALESCE(SUM(order.totalAmount), 0)', 'total')
+      .where('order.status = :status', { status: OrderStatus.DELIVERED })
+      .getRawOne()
+      .then((r) => parseFloat(r.total));
+
+    return { totalOrders, totalRevenue, byStatus };
+  }
+
   async getOrderForParticipant(orderId: string, participantId: string) {
     return this.orderRepo.findOne({
       where: [

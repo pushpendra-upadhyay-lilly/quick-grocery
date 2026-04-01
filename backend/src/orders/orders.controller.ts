@@ -3,8 +3,10 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
@@ -83,5 +85,39 @@ export class OrdersController {
   @Roles('delivery_partner')
   async markDelivered(@CurrentUser() user: any, @Param('id') orderId: string) {
     return this.ordersService.markDelivered(orderId, user.id);
+  }
+
+  // ── Admin endpoints ───────────────────────────────────────────────────────
+
+  @Get('admin/stats')
+  @Roles('admin')
+  async adminOrderStats() {
+    return this.ordersService.adminGetOrderStats();
+  }
+
+  @Get('admin/list')
+  @Roles('admin')
+  async adminListOrders(
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+    @Query('status') status?: string,
+  ) {
+    return this.ordersService.adminGetAllOrders({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      status: status as OrderStatus | undefined,
+    });
+  }
+
+  @Get('admin/:id')
+  @Roles('admin')
+  async adminGetOrder(@Param('id') orderId: string) {
+    return this.ordersService.adminGetOrderById(orderId);
+  }
+
+  @Delete('admin/:id/cancel')
+  @Roles('admin')
+  async adminCancelOrder(@Param('id') orderId: string) {
+    return this.ordersService.adminCancelOrder(orderId);
   }
 }

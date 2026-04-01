@@ -6,6 +6,7 @@ const navItems = [
   { to: '/', label: 'Dashboard', icon: '▣', end: true },
   { to: '/products', label: 'Products', icon: '⊞' },
   { to: '/categories', label: 'Categories', icon: '⊟' },
+  { to: '/orders', label: 'Orders', icon: '◫' },
 ];
 
 export default function AdminShell() {
