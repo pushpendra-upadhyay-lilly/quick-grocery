@@ -91,7 +91,7 @@ export default function HomePage() {
 
       {/* Order Status Badge - Show when order is in progress */}
       {user && inProgressOrders.length > 0 && (
-        <OrderStatusBadge orders={inProgressOrders} />
+        <OrderStatusBadge orders={inProgressOrders} sticky/>
       )}
     </div>
   );

@@ -8,6 +8,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,webp,svg}'],
+        maximumFileSizeToCacheInBytes: 1024 * 1024 * 5, // 5 MB
+      },
       includeAssets: ['favicon.ico', 'icons/*.png'],
       manifest: {
         name: 'QuickGrocery Delivery',
@@ -37,30 +44,9 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        runtimeCaching: [
-          {
-            urlPattern: /^https?:\/\/.*\/api\/products/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-products',
-              expiration: {
-                maxAgeSeconds: 300,
-              },
-            },
-          },
-          {
-            urlPattern: /\.(png|jpg|jpeg|webp|svg)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images',
-              expiration: {
-                maxEntries: 200,
-                maxAgeSeconds: 86400,
-              },
-            },
-          },
-        ],
+      devOptions: {
+        enabled: true,
+        type: 'module',
       },
     }),
   ],

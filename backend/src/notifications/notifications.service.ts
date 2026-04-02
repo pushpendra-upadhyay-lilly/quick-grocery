@@ -1,10 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Subject } from 'rxjs';
+import { Order } from '../orders/entities/order.entity';
+import { OrderStatus } from '../orders/entities/order.entity';
+import { PushService, PushPayload } from './push.service';
+
+const PUSH_MESSAGES: Record<OrderStatus, { title: string; body: string }> = {
+  [OrderStatus.PENDING]:          { title: 'Order Placed',        body: 'Your order has been placed and is awaiting confirmation.' },
+  [OrderStatus.ACCEPTED]:         { title: 'Order Accepted',      body: 'A delivery partner has accepted your order!' },
+  [OrderStatus.GOING_FOR_PICKUP]: { title: 'Heading to Store',    body: 'Your delivery partner is on the way to pick up your groceries.' },
+  [OrderStatus.OUT_FOR_DELIVERY]: { title: 'Out for Delivery',    body: 'Your groceries are on the way to you!' },
+  [OrderStatus.REACHED]:          { title: 'Driver Has Arrived',  body: 'Your delivery partner has arrived at your location.' },
+  [OrderStatus.DELIVERED]:        { title: 'Order Delivered',     body: 'Your order has been delivered. Enjoy your groceries!' },
+  [OrderStatus.CANCELLED]:        { title: 'Order Cancelled',     body: 'Your order has been cancelled.' },
+};
 
 @Injectable()
 export class NotificationsService {
   private streams = new Map<string, Subject<MessageEvent>>();
+
+  constructor(
+    private pushService: PushService,
+    @InjectRepository(Order) private orderRepo: Repository<Order>,
+  ) {}
 
   getStream(orderId: string): Subject<MessageEvent> {
     let stream = this.streams.get(orderId);
@@ -16,17 +36,41 @@ export class NotificationsService {
   }
 
   @OnEvent('order.status_updated')
-  handleStatusUpdate(payload: {
+  async handleStatusUpdate(payload: {
     orderId: string;
     status: string;
     timestamp: Date;
   }) {
+    // SSE: push to any open browser connections
     const stream = this.streams.get(payload.orderId);
     if (stream) {
       stream.next({
         data: JSON.stringify(payload),
       } as any);
     }
+
+    // Web push: notify customer even when app is closed
+    const order = await this.orderRepo.findOne({ where: { id: payload.orderId } });
+    if (!order) return;
+
+    const msg = PUSH_MESSAGES[payload.status as OrderStatus] ?? {
+      title: 'Order Update',
+      body: `Your order status has changed to ${payload.status}.`,
+    };
+
+    const pushPayload: PushPayload = {
+      title: msg.title,
+      body: msg.body,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: {
+        orderId: payload.orderId,
+        status: payload.status,
+        url: `/orders/${payload.orderId}`,
+      },
+    };
+
+    await this.pushService.sendToUser(order.userId, pushPayload);
   }
 
   closeStream(orderId: string) {
@@ -37,3 +81,4 @@ export class NotificationsService {
     }
   }
 }
+

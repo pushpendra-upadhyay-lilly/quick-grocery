@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useLogout } from '../hooks/useAuth';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import ProfileHeader from '../components/ProfileHeader';
 
 export default function AccountPage() {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
   const logout = useLogout();
+  const { isSubscribed, isSupported, isDenied, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
 
   const handleLogout = async () => {
     await logout.mutateAsync();
@@ -58,14 +60,36 @@ export default function AccountPage() {
             </div>
           </div> */}
 
-          {/* Preferences */}
+          {/* Notifications */}
           <div className="bg-brand-50 border-2 border-brand-200 rounded-lg p-4">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm font-semibold text-brand-700">Notifications</p>
-                <p className="text-xs text-brand-600 mt-1">Enabled</p>
+                <p className="text-xs text-brand-600 mt-1">
+                  {!isSupported
+                    ? 'Not supported in this browser'
+                    : isDenied
+                      ? 'Blocked — enable in site settings'
+                      : isSubscribed
+                        ? 'Order updates enabled'
+                        : 'Order updates disabled'}
+                </p>
               </div>
-              <span className="text-2xl">🔔</span>
+              {isSupported && !isDenied ? (
+                <button
+                  onClick={isSubscribed ? unsubscribe : subscribe}
+                  disabled={pushLoading}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                    isSubscribed
+                      ? 'bg-green-900 text-green-300'
+                      : 'bg-gray-700 text-gray-300'
+                  } disabled:opacity-50`}
+                >
+                  {pushLoading ? '...' : isSubscribed ? 'On' : 'Off'}
+                </button>
+              ) : (
+                <span className="text-2xl">🔔</span>
+              )}
             </div>
           </div>
         </div>
