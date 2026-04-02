@@ -19,7 +19,10 @@ const PUSH_MESSAGES: Record<OrderStatus, { title: string; body: string }> = {
 
 @Injectable()
 export class NotificationsService {
+  // Per-order streams for customer order tracking
   private streams = new Map<string, Subject<MessageEvent>>();
+  // Per-DP streams for assigned orders list
+  private dpStreams = new Map<string, Subject<MessageEvent>>();
 
   constructor(
     private pushService: PushService,
@@ -35,13 +38,33 @@ export class NotificationsService {
     return stream;
   }
 
+  getDpStream(dpId: string): Subject<MessageEvent> {
+    let stream = this.dpStreams.get(dpId);
+    if (!stream) {
+      stream = new Subject<MessageEvent>();
+      this.dpStreams.set(dpId, stream);
+    }
+    return stream;
+  }
+
+  private async pushAssignedOrders(dpId: string) {
+    const stream = this.dpStreams.get(dpId);
+    if (!stream) return;
+    const orders = await this.orderRepo.find({
+      where: { deliveryPartnerId: dpId },
+      relations: ['items', 'statusHistory'],
+      order: { createdAt: 'DESC' },
+    });
+    stream.next({ data: JSON.stringify({ type: 'orders', orders }) } as any);
+  }
+
   @OnEvent('order.status_updated')
   async handleStatusUpdate(payload: {
     orderId: string;
     status: string;
     timestamp: Date;
   }) {
-    // SSE: push to any open browser connections
+    // SSE: push to any open browser connections for the customer
     const stream = this.streams.get(payload.orderId);
     if (stream) {
       stream.next({
@@ -49,10 +72,15 @@ export class NotificationsService {
       } as any);
     }
 
-    // Web push: notify customer even when app is closed
     const order = await this.orderRepo.findOne({ where: { id: payload.orderId } });
     if (!order) return;
 
+    // SSE: push updated orders list to the assigned DP
+    if (order.deliveryPartnerId) {
+      await this.pushAssignedOrders(order.deliveryPartnerId);
+    }
+
+    // Web push: notify customer even when app is closed
     const msg = PUSH_MESSAGES[payload.status as OrderStatus] ?? {
       title: 'Order Update',
       body: `Your order status has changed to ${payload.status}.`,
@@ -73,6 +101,16 @@ export class NotificationsService {
     await this.pushService.sendToUser(order.userId, pushPayload);
   }
 
+  @OnEvent('order.accepted')
+  async handleOrderAccepted(payload: { orderId: string; deliveryPartnerId: string }) {
+    await this.pushAssignedOrders(payload.deliveryPartnerId);
+  }
+
+  @OnEvent('order.completed')
+  async handleOrderCompleted(payload: { orderId: string; dpId: string }) {
+    await this.pushAssignedOrders(payload.dpId);
+  }
+
   closeStream(orderId: string) {
     const stream = this.streams.get(orderId);
     if (stream) {
@@ -80,5 +118,12 @@ export class NotificationsService {
       this.streams.delete(orderId);
     }
   }
-}
 
+  closeDpStream(dpId: string) {
+    const stream = this.dpStreams.get(dpId);
+    if (stream) {
+      stream.complete();
+      this.dpStreams.delete(dpId);
+    }
+  }
+}

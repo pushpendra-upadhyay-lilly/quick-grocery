@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import apiClient from '../lib/apiClient';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import type { OrderStatus } from '../constants/orderStatus';
 import { toNumber, toOptionalNumber } from '../lib/parsers';
@@ -63,16 +62,40 @@ const normalizeOrder = (order: Record<string, unknown>): Order => ({
 
 export function useOrders() {
   const token = useAuthStore((s) => s.accessToken);
-  return useQuery({
-    queryKey: ['deliveries'],
-    queryFn: async () => {
-      const response = await apiClient.get('/orders/assigned/list');
-      return Array.isArray(response.data)
-        ? response.data.filter(isRecord).map(normalizeOrder)
-        : [];
-    },
-    enabled: !!token,
-    staleTime: 0,
-    refetchInterval: 15_000,
-  });
+  const [data, setData] = useState<Order[]>([]);
+  // Start as loading when a token is present; idle when logged out
+  const [isLoading, setIsLoading] = useState(!!token);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const es = new EventSource(`/api/orders/assigned/stream?token=${token}`);
+
+    es.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'orders' && Array.isArray(msg.orders)) {
+          setData(msg.orders.filter(isRecord).map(normalizeOrder));
+          setIsLoading(false);
+        }
+      } catch {
+        // ignore parse errors
+      }
+    };
+
+    es.onerror = () => {
+      es.close();
+      setIsLoading(false);
+    };
+
+    return () => {
+      es.close();
+      setData([]);
+    };
+  }, [token]);
+
+  // refetch is a no-op — updates arrive via SSE
+  const refetch = () => {};
+
+  return { data, isLoading, refetch };
 }
