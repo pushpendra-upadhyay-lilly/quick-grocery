@@ -144,7 +144,8 @@ export default function RegisterPage() {
       <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-lg p-8">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-brand-700 mb-2">🛒 Sign Up</h1>
+          <img src="/AppLogoFull.png" alt="QuickGrocery" className="h-20 w-auto mx-auto opacity-80 my-1" />
+          <h1 className="text-3xl font-bold text-brand-700 mb-2">Sign Up</h1>
           <p className="text-brand-600">
             {step === 'details' ? 'Create your account' : 'Verify your identity'}
           </p>

@@ -15,7 +15,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,webp,svg}'],
         maximumFileSizeToCacheInBytes: 1024 * 1024 * 5, // 5 MB
       },
-      includeAssets: ['favicon.ico', 'icons/*.png'],
+      includeAssets: ['favicon.png', 'icons/*.png'],
       manifest: {
         name: 'QuickGrocery Delivery',
         short_name: 'QuickGrocery',
