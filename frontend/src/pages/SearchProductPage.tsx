@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 import ProductCard from '../components/ProductCard';
 import { Search } from 'lucide-react';
-import { useAddToCart } from '../hooks/useCart';
 import { useMyFrequentProducts, useProducts, useTopProducts } from '../hooks/useProducts';
 import { useProductSuggestions } from '../hooks/useProductSuggestions';
 import { useAuthStore } from '../stores/authStore';
@@ -33,7 +31,6 @@ export default function SearchProductPage() {
   const { data: suggestions, isLoading: suggestionsLoading } = useProductSuggestions(inputValue.trim(), 8);
   const { data: topProducts, isLoading: topLoading } = useTopProducts();
   const { data: myFrequent, isLoading: myFrequentLoading } = useMyFrequentProducts();
-  const addToCart = useAddToCart();
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -48,17 +45,6 @@ export default function SearchProductPage() {
   const handleRecentSearchClick = (search: string) => {
     setInputValue(search);
     setSearchQuery(search);
-  };
-
-  const handleAddToCart = (product: any) => {
-    addToCart.mutate({
-      productId: product.slug,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.imageUrl,
-      unit: product.unit,
-    });
-    toast.success('Added to cart!');
   };
 
   const isSearching = searchQuery.length > 0;
@@ -133,8 +119,6 @@ export default function SearchProductPage() {
                     <ProductCard
                       key={product._id}
                       product={product}
-                      onAddToCart={handleAddToCart}
-                      isAddingToCart={addToCart.isPending}
                     />
                   ))}
                 </div>

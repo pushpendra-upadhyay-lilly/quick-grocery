@@ -1,28 +1,12 @@
 import { useState } from 'react';
-import { useAddToCart } from '../hooks/useCart';
-import { useProducts } from '../hooks/useProducts';
-// import { useNavbarHeading } from '../hooks/useNavbarHeading';
-import toast from 'react-hot-toast';
 import CategorySidebar from '../components/CategorySidebar';
 import ProductCard from '../components/ProductCard';
+import { useProducts } from '../hooks/useProducts';
 import type { Product } from '../interfaces/products';
 
 function Products({ subCategoryId }: { subCategoryId?: string }) {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useProducts(page, 20, subCategoryId);
-  const addToCart = useAddToCart();
-
-  const handleAddToCart = (product: Product) => {
-    addToCart.mutate({
-      productId: product.slug,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.imageUrl,
-      unit: product.unit,
-    });
-    toast.success('Added to cart!');
-  };
-
 
   return isLoading ? (
     <div className="text-brand-600">Loading products...</div>
@@ -33,12 +17,10 @@ function Products({ subCategoryId }: { subCategoryId?: string }) {
   ) : (
     <>
       <div className="grid grid-cols-2 gap-2 mb-8 items-start">
-        {data?.data?.map((product: any) => (
+        {data?.data?.map((product: Product) => (
           <ProductCard
             key={product._id}
             product={product}
-            onAddToCart={handleAddToCart}
-            isAddingToCart={addToCart.isPending}
           />
         ))}
       </div>
