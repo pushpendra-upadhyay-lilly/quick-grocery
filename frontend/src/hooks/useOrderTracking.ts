@@ -14,7 +14,8 @@ export function useOrderTracking(orderId: string | undefined, shouldConnect: boo
 
   const connect = useCallback(
     (id: string, token: string) => {
-      const url = `/api/orders/${id}/events?token=${token}`;
+      const baseUrl = import.meta.env.VITE_API_URL ?? '/api';
+      const url = `${baseUrl}/orders/${id}/events?token=${token}`;
       const es = new EventSource(url, { withCredentials: true });
 
       es.onopen = () => {

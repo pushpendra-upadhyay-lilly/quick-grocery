@@ -35,7 +35,8 @@ export default function OrderStatusBadge({ orders = [], sticky = true }: OrderSt
     const eventSources: Record<string, EventSource> = {};
 
     orders.forEach((order) => {
-      const url = `/api/orders/${order.id}/events?token=${accessToken}`;
+      const baseUrl = import.meta.env.VITE_API_URL ?? '/api';
+      const url = `${baseUrl}/orders/${order.id}/events?token=${accessToken}`;
       const es = new EventSource(url, { withCredentials: true });
 
       es.onmessage = (e) => {
