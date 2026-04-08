@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
+import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
+import { registerRoute, NavigationRoute } from 'workbox-routing';
 import { NetworkFirst, CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
@@ -9,6 +9,9 @@ declare let self: ServiceWorkerGlobalScope;
 // Workbox precaching — vite-plugin-pwa injects the manifest here
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
+
+// SPA fallback: all navigation requests return index.html
+registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
 
 // Runtime caching: API products (NetworkFirst, 5 min TTL)
 registerRoute(
